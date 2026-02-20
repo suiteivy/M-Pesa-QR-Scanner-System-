@@ -1,21 +1,33 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
+// This is the main server file for the M-Pesa QR Backend API
+// It sets up the Express server and routes
+//Thus the use of express 5 compatible syntax and middleware
+
+import 'dotenv/config'; 
+import express from 'express';
+import cors from 'cors';
+import { db,admin } from './config//firebase.js';
 const app = express();
 
 // Import routes
-const authRoutes = require('./routes/auth');
-const darajaRoutes = require('./routes/daraja');
-const transactionRoutes = require('./routes/transactions');
-const qrPayRouter = require('./routes/qrPay');
+import authRoutes from './routes/auth.js';
+import darajaRoutes from './routes/daraja.js';
+import transactionRoutes from './routes/transactions.js';
+import qrPayRouter from './routes/qrPay.js';
+import menuRoutes from './routes/menu.js'; 
+
 app.use(qrPayRouter);
 
 // Enhanced CORS configuration
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3001'], // Add your frontend URLs
-  credentials: true,
+  origin: '*', // Allow all origins for mobile testing
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'ngrok-skip-browser-warning',
+    'Accept'
+  ],
+  credentials: true
 }));
 
 // Middleware
@@ -36,11 +48,21 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);          // Authentication routes
 app.use('/api/daraja', darajaRoutes);      // M-Pesa routes  
 app.use('/api/transactions', transactionRoutes); // Transaction routes
+app.use('/api/menu', menuRoutes);         // Menu management routes
 
-// Legacy routes for backwards compatibility
-app.use('/auth', authRoutes);
-app.use('/daraja', darajaRoutes);
-app.use('/transactions', transactionRoutes);
+
+
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'M-Pesa QR Backend API',
+    timestamp: new Date().toISOString(),
+    routes: {
+      auth: '/api/auth',
+      daraja: '/api/daraja',
+      transactions: '/api/transactions'
+    }
+  });
+});
 
 // Test route
 app.get('/', (req, res) => {
@@ -53,6 +75,28 @@ app.get('/', (req, res) => {
       transactions: '/api/transactions'
     }
   });
+});
+app.get('/list-collections', async (req, res) => {
+  try {
+    // This will tell us exactly which project Node is looking at
+    const projectId = admin.apps[0].options.projectId || "Unknown";
+    console.log(`Checking collections for project: ${projectId}`);
+
+    const collections = await db.listCollections();
+    const collectionIds = collections.map(col => col.id);
+    
+    res.json({ 
+      success: true, 
+      projectId: projectId,
+      foundCollections: collectionIds 
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      message: "Could not list collections",
+      error: error.message 
+    });
+  }
 });
 
 // Health check route
@@ -67,6 +111,24 @@ app.get('/health', (req, res) => {
       transactions: '/api/transactions'
     }
   });
+});
+app.get('/list-collections', async (req, res) => {
+  try {
+    // This method asks the Firestore database to reveal all its secrets
+    const collections = await db.listCollections();
+    const collectionIds = collections.map(col => col.id);
+    
+    res.json({ 
+      success: true, 
+      foundCollections: collectionIds 
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      message: "Could not list collections",
+      error: error.message 
+    });
+  }
 });
 
 // Error handling
@@ -90,7 +152,7 @@ app.use((req, res) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📍 Health check: http://localhost:${PORT}/health`);
@@ -99,4 +161,4 @@ app.listen(PORT, () => {
   console.log(`📊 Transaction routes: http://localhost:${PORT}/api/transactions`);
 });
 
-module.exports = app;
+export default app;

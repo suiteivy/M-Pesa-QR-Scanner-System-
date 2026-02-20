@@ -1,10 +1,15 @@
-// API Configuration - Support both local and ngrok
-const isDevelopment = process.env.NODE_ENV === 'development';
-const useNgrok = process.env.REACT_APP_USE_NGROK === 'true';
+// constants.js
 
-export const API_BASE_URL = useNgrok 
-  ? process.env.REACT_APP_NGROK_URL || 'https://3938e255c6df.ngrok-free.app'
-  : process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000';
+// 1. ROBUST URL RESOLUTION
+// We check for the variable you actually set (REACT_APP_API_URL)
+// If that fails, we fallback to the IP you provided: http://192.168.100.10:5000
+const ENV_URL = process.env.REACT_APP_API_URL || process.env.REACT_APP_BACKEND_URL;
+const FALLBACK_URL = "http://192.168.100.10:5000";
+
+// Remove trailing slashes to prevent double slash errors (e.g. //api)
+export const API_BASE_URL = (ENV_URL || FALLBACK_URL).replace(/\/$/, "");
+
+console.log("🚀 API Base URL configured as:", API_BASE_URL);
 
 // Payment Status Constants
 export const STATUS = {
@@ -16,28 +21,31 @@ export const STATUS = {
 };
 
 // API Endpoints
+// IMPORTANT: Notice I removed the hardcoded '/api' strings here 
+// because we will construct them safely, OR ensure your backend expects /api/api if base has it.
+// Standard practice: Base URL = host:5000, Endpoints start with /api
 export const API_ENDPOINTS = {
   AUTH: {
-    LOGIN: '/auth/login',
-    SIGNUP: '/auth/signup'
+    LOGIN: '/api/auth/login',
+    SIGNUP: '/api/auth/signup',
+    VERIFY: '/api/auth/verify-token'
   },
-  // M-Pesa/Daraja endpoints
   MPESA: {
-    CUSTOMER_PAYMENT: '/daraja/customer-payment',
-    MERCHANT_PAYMENT: '/daraja/scan-qr',
-    STK_PUSH: '/daraja/scan-qr',
-    TRIGGER_STK: '/api/trigger-stk-push',
-    CALLBACK: '/daraja/stk-callback'
+    CUSTOMER_PAYMENT: '/api/daraja/customer-payment',
+    MERCHANT_PAYMENT: '/api/daraja/stk-push',
+    STK_PUSH: '/api/daraja/stk-push',
+    CALLBACK: '/api/daraja/stk-callback',
+    GENERATE_QR: '/api/daraja/generate-qr'
   },
   TRANSACTIONS: {
-    LIST: '/transactions',
-    CREATE: '/transactions',
-    GET_BY_ID: '/transactions/:id',
-    GET_ALL: '/transactions'
+    LIST: '/api/transactions',
+    ANALYTICS: '/api/transactions/analytics', // This is the one we fixed!
+    GET_BY_ID: '/api/transactions/:id',
+    QR_INSIGHTS: '/api/transactions/qr-insights'
   },
   HEALTH: {
-    CHECK: '/daraja/health',
-    TEST_TOKEN: '/daraja/test-token'
+    CHECK: '/api/daraja/health-check',
+    TEST_TOKEN: '/api/daraja/test-token'
   }
 };
 
@@ -65,9 +73,9 @@ export const ERROR_MESSAGES = {
 
 // UI Configuration
 export const UI_CONFIG = {
-  POLLING_INTERVAL: 5000, // 5 seconds
-  MAX_POLL_ATTEMPTS: 12,  // 1 minute total (5s * 12)
-  PAYMENT_TIMEOUT: 60000, // 60 seconds
+  POLLING_INTERVAL: 5000, 
+  MAX_POLL_ATTEMPTS: 12,  
+  PAYMENT_TIMEOUT: 60000, 
 };
 
 // User Roles

@@ -1,85 +1,88 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
+import {
+  onAuthStateChanged as firebaseOnAuthStateChanged,
+  signOut as firebaseSignOut
+} from "firebase/auth";
 import { auth } from '../firebase';
 import axios from 'axios';
 import { API_BASE_URL } from '../utility/constants';
 
-// Create the auth context
 const AuthContext = createContext();
 
-// Hook to use auth context
 export function useAuth() {
   return useContext(AuthContext);
 }
 
-// Provider component that wraps app and provides auth context
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [merchantData, setMerchantData] = useState(null);
 
-  // Set up auth state listener on component mount
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    const unsubscribe = firebaseOnAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      
-      // If user is logged in, fetch their merchant data
-      if (currentUser) {
-        try {
-          const idToken = await currentUser.getIdToken();
-          const response = await axios.post(
-            `${API_BASE_URL}/api/auth/verify-token`,
-            { idToken },
-            {
-              headers: {
-                'Authorization': `Bearer ${idToken}`,
-                'Content-Type': 'application/json'
-              }
-            }
-          );
-          
-          if (response.data && response.data.user) {
-            setMerchantData(response.data.user);
-          }
-        } catch (error) {
-          console.error('Error fetching merchant data:', error);
-        }
-      } else {
-        // Clear merchant data when user logs out
+      // If no user is logged in, kill the loading state immediately
+      if (!currentUser) {
         setMerchantData(null);
+        setLoading(false);
       }
-      
-      setLoading(false);
     });
-
-    // Clean up subscription on unmount
     return () => unsubscribe();
   }, []);
 
-  // Logout function
+  useEffect(() => {
+    const fetchMerchantProfile = async () => {
+      // 1. Only fetch if we have a Firebase session but no local profile yet
+      if (!user) return;
+
+      try {
+        const idToken = await user.getIdToken();
+
+        // 2. This hits your updated backend that now returns the FULL Firestore doc
+        const response = await axios.get( // Changed to GET
+          `${API_BASE_URL}/api/auth/profile`, // Changed to /profile
+          {
+            headers: {
+              'Authorization': `Bearer ${idToken}`,
+              'ngrok-skip-browser-warning': 'true'
+            }
+          }
+        );
+
+        // 3. Update merchantData with the comprehensive profile from the backend
+        if (response.data?.success && response.data?.user) {
+          setMerchantData(response.data.user);
+        }
+      } catch (error) {
+        console.error('⚠️ Merchant Profile Fetch Failed:', error.response?.data || error.message);
+        // Fallback: If backend fails, we keep the user but set merchantData to null
+        setMerchantData(null);
+      } finally {
+        // 4. Critical: Only set loading to false AFTER the profile attempt
+        setLoading(false);
+      }
+    };
+
+    fetchMerchantProfile();
+  }, [user]);
+
   const logout = async () => {
     try {
-      await signOut(auth);
+      await firebaseSignOut(auth);
       setMerchantData(null);
-      // You might want to redirect to login page after logout
+      setUser(null);
     } catch (error) {
-      console.error('Error logging out:', error);
+      console.error('Logout error:', error);
     }
   };
 
-  // Context value to be provided to consumers
-  const value = {
+  const value = useMemo(() => ({
     user,
-    loading,
     merchantData,
-    setMerchantData,
-    logout,
-    isAuthenticated: !!user
-  };
+    loading,
+    setMerchantData, // Allows manual updates (e.g., after an upgrade)
+    logout
+  }), [user?.uid, merchantData, loading]);
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
