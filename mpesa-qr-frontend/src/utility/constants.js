@@ -83,3 +83,17 @@ export const USER_ROLES = {
   CUSTOMER: 'customer',
   MERCHANT: 'merchant'
 };
+
+// Drop this in your frontend (e.g., inside utility/constants.js or your component)
+export const formatUIDate = (isoString) => {
+  if (!isoString) return 'N/A';
+  
+  // Since the backend sent a clean ISO string, we just pass it straight to Date()
+  return new Date(isoString).toLocaleString('en-KE', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  });
+};

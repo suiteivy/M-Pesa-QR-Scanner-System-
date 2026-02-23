@@ -1,68 +1,107 @@
 import React from 'react';
-import { Lock, Zap } from 'lucide-react';
+import { Lock, Zap, RefreshCw, PlusCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom'; // HCI: Use fast client-side routing
 import { useSubscription } from './SubscriptionProvider';
 import Button from '../components/ui/Button';
 
 const SubscriptionShield = ({ 
   children, 
-  requiredTier = 'BASIC', // Matches your "BASIC" | "ELITE" schema
-  requiredAddon = null,   // Matches "menuEnabled"
+  requiredTier = 'CORE', 
+  requiredAddon = null,   
   featureName = "this feature" 
 }) => {
+  const navigate = useNavigate();
   const { tier, isValid, menuEnabled } = useSubscription();
 
-  // --- HCI Logic ---
-  // 1. Premium users always have access to Basic features
-  // 2. Access is only granted if the subscription is valid (not expired)
-  const hasTierAccess = (tier === 'ELITE') || (tier === requiredTier);
-  
-  // 3. Addon check: If required, check menuEnabled boolean
+  // --- Logic Checks ---
+  // Using 'PRO' assuming your elite tier was rebranded to Merchant Pro in the UI
+  const hasTierAccess = tier === 'PRO' || tier === 'ELITE' || tier === requiredTier;
   const hasAddonAccess = requiredAddon ? menuEnabled : true;
   
-  // 4. Final Verdict
-  const isLocked = !isValid || !hasTierAccess || !hasAddonAccess;
+  // --- HCI: Error Diagnosis ---
+  // Determine the EXACT reason they are locked out to provide the correct recovery path
+  const isExpired = !isValid;
+  const needsTierUpgrade = !hasTierAccess;
+  const needsAddon = requiredAddon && !hasAddonAccess;
+
+  const isLocked = isExpired || needsTierUpgrade || needsAddon;
 
   if (!isLocked) {
     return <>{children}</>;
   }
 
+  // --- Dynamic UI Configuration based on the Lock Reason ---
+  let lockConfig = {
+    title: 'Access Restricted',
+    desc: 'You do not have access to this feature.',
+    ctaText: 'View Plans',
+    icon: <Lock className="w-8 h-8 text-orange-600" />,
+    action: () => navigate('/upgrade')
+  };
+
+  if (isExpired) {
+    lockConfig = {
+      title: 'Subscription Expired',
+      desc: `Your plan has expired. Renew to restore access to ${featureName}.`,
+      ctaText: 'Renew Plan',
+      icon: <RefreshCw className="w-8 h-8 text-orange-600 animate-spin-slow" />,
+      action: () => navigate('/upgrade')
+    };
+  } else if (needsAddon) {
+    lockConfig = {
+      title: 'Module Required',
+      desc: `The ${featureName} requires the dedicated add-on module.`,
+      ctaText: 'Add to Plan',
+      icon: <PlusCircle className="w-8 h-8 text-orange-600" />,
+      action: () => navigate('/upgrade?addon=menu') // Deep linking for efficiency
+    };
+  } else if (needsTierUpgrade) {
+    lockConfig = {
+      title: 'Pro Feature',
+      desc: `Upgrade your terminal to unlock ${featureName} and advanced analytics.`,
+      ctaText: 'Upgrade to Pro',
+      icon: <Zap className="w-8 h-8 text-orange-600" />,
+      action: () => navigate('/upgrade')
+    };
+  }
+
   return (
-    // Rebranded: Use the Zinc-950 backdrop to match your AMOLED theme
-    <div className="relative group overflow-hidden rounded-[2.5rem] min-h-[300px] flex flex-col">
+    // HEURISTIC: Beautiful and Simple Design
+    // We wrap the children in a relative container.
+    <div className="relative group overflow-hidden rounded-[2rem] min-h-[300px] border border-transparent dark:border-zinc-800/50">
       
-      {/* 1. The Teaser Layer: Blurred & Grayscale */}
-      <div className="blur-xl pointer-events-none select-none filter grayscale opacity-20 transition-all duration-700 flex-1">
+      {/* 1. The Teaser Layer: Reduced opacity and grayscale so they can see what they are missing */}
+      <div className="blur-md select-none filter grayscale-[0.8] opacity-30 dark:opacity-20 transition-all duration-700 pointer-events-none">
         {children}
       </div>
 
-      {/* 2. The Interactive Overlay */}
-      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 bg-white dark:bg-zinc-950/60 backdrop-blur-[4px] animate-in fade-in duration-500">
-        <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-10 rounded-[3rem] shadow-[0_0_50px_rgba(234,88,12,0.1)] text-center max-w-sm">
+      {/* 2. The Interactive Overlay: Frosted Glass */}
+      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 bg-white/40 dark:bg-zinc-950/60 backdrop-blur-md animate-in fade-in duration-500">
+        
+        {/* HEURISTIC: Match System to Real World (Clear, physical-looking card) */}
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 md:p-10 rounded-[2.5rem] shadow-2xl text-center max-w-sm w-full relative overflow-hidden">
           
-          {/* Animated Icon Container */}
-          <div className="bg-orange-600/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 border border-orange-600/20 shadow-inner">
-            <Lock className="w-10 h-10 text-orange-600 animate-pulse" />
+          <div className="bg-orange-50 dark:bg-orange-900/10 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-orange-200 dark:border-orange-800/30">
+            {lockConfig.icon}
           </div>
           
-          <div className="space-y-2 mb-8">
+          <div className="space-y-2 mb-8 relative z-10">
             <h3 className="text-zinc-950 dark:text-white font-black uppercase italic tracking-tighter text-2xl leading-tight">
-              Unlock <span className="text-orange-600">{featureName}</span>
+              {lockConfig.title}
             </h3>
-            <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.3em] leading-relaxed">
-              Required: {requiredAddon ? "Menu Add-on" : "Premium Subscription"}
+            <p className="text-zinc-500 dark:text-zinc-400 text-xs font-bold uppercase tracking-widest leading-relaxed">
+              {lockConfig.desc}
             </p>
           </div>
 
           <Button 
-            variant="default" 
-            className="w-full h-16 text-xs shadow-orange-600/40" 
-            onClick={() => window.location.href = '/upgrade'}
+            className="w-full h-14 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-black uppercase tracking-widest text-xs shadow-lg shadow-orange-600/20 active:scale-95 transition-all flex items-center justify-center" 
+            onClick={lockConfig.action}
           >
-            <Zap className="w-5 h-5 mr-3 fill-current" />
-            Upgrade Terminal
+            {lockConfig.ctaText}
           </Button>
 
-          <p className="mt-6 text-[9px] font-bold text-zinc-600 uppercase tracking-widest">
+          <p className="mt-5 text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">
             Instant Activation via M-Pesa
           </p>
         </div>

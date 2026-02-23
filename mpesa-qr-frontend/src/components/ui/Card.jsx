@@ -2,12 +2,14 @@ import React from 'react';
 
 /**
  * Card Component
- * Optimized for AMOLED depth and high-contrast FinTech UIs.
+ * Optimized for AMOLED depth. Uses brand-gray for surfaces.
  */
 export const Card = ({ children, className = '', ...props }) => {
   return (
     <div
-      className={`bg-zinc-100 dark:bg-zinc-900 shadow-2xl rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800/50 overflow-hidden transition-all duration-300 hover:border-orange-600/30 ${className}`}
+      // 1. Switched to brand-gray for dark mode surfaces
+      // 2. Added 'relative' so background watermark icons don't escape the card
+      className={`relative bg-white dark:bg-brand-gray shadow-xl rounded-[2rem] border border-zinc-200 dark:border-brand-gray overflow-hidden transition-all duration-300 ${className}`}
       {...props}
     >
       {children}
@@ -17,12 +19,13 @@ export const Card = ({ children, className = '', ...props }) => {
 
 /**
  * CardHeader Component
- * Clean separation with uppercase metadata styling.
+ * Clean separation. Backgrounds removed so it inherits the parent card's color.
  */
 export const CardHeader = ({ children, className = '', ...props }) => {
   return (
     <div 
-      className={`px-8 py-6 border-b border-zinc-200 dark:border-zinc-800/50 bg-zinc-100 dark:bg-zinc-900/50 ${className}`} 
+      // 3. Removed hardcoded bg so Orange cards stay Orange!
+      className={`px-6 py-5 border-b border-zinc-100 dark:border-zinc-800/50 ${className}`} 
       {...props}
     >
       {children}
@@ -32,12 +35,13 @@ export const CardHeader = ({ children, className = '', ...props }) => {
 
 /**
  * CardContent Component
- * Generous padding for high-end mobile readability.
+ * Protected by z-index to keep text readable above watermarks.
  */
 export const CardContent = ({ children, className = '', ...props }) => {
   return (
     <div 
-      className={`px-8 py-6 ${className}`} 
+      // 4. Added relative z-10 so your text always sits on top of decorative icons
+      className={`relative z-10 px-6 py-6 ${className}`} 
       {...props}
     >
       {children}
@@ -52,7 +56,8 @@ export const CardContent = ({ children, className = '', ...props }) => {
 export const CardTitle = ({ children, className = '', ...props }) => {
   return (
     <h3 
-      className={`text-xl font-black text-zinc-950 dark:text-white italic uppercase tracking-tighter leading-none ${className}`} 
+      // Changed text-zinc-950 to text-inherit so it adapts if the card is orange or black
+      className={`text-xl font-black italic uppercase tracking-tighter leading-none ${className}`} 
       {...props}
     >
       {children}
@@ -67,7 +72,8 @@ export const CardTitle = ({ children, className = '', ...props }) => {
 export const CardDescription = ({ children, className = '', ...props }) => {
   return (
     <p 
-      className={`text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mt-2 ${className}`} 
+      // Made slightly more dynamic for dark mode
+      className={`text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400 mt-2 ${className}`} 
       {...props}
     >
       {children}

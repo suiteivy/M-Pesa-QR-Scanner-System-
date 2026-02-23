@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect,useRef} from 'react';
+import { useNavigate } from 'react-router-dom';
+
 import QRCode from 'qrcode';
 import axios from 'axios';
 import {
@@ -6,6 +8,9 @@ import {
   Share2,
   AlertCircle,
   ArrowUpRight,
+  ArrowLeft,
+  CheckCircle,
+  Clock,
   Loader2,
   Zap,
   QrCode
@@ -24,6 +29,7 @@ const MerchantQRGenerator = () => {
   const [success, setSuccess] = useState('');
   const { user, merchantData, logout } = useAuth();
   const [merchant, setMerchant] = useState(merchantData);
+  const navigate = useNavigate();
 
   const generateQRData = async () => {
     if (!user) {
@@ -111,111 +117,165 @@ const MerchantQRGenerator = () => {
       if (err.name !== 'AbortError') setError('Distribution failed.');
     }
   };
+// 1. Create the reference
+  const qrResultRef = useRef(null);
 
-  return (
-    <div className="min-h-screen bg-white dark:bg-zinc-950 p-6 md:p-12 animate-in fade-in duration-700">
-      <div className="max-w-4xl mx-auto space-y-10">
+  // 2. Watch for the QR code to appear and scroll to it
+  useEffect(() => {
+    if (qrCodeUrl && qrResultRef.current) {
+      // Small timeout ensures the DOM has painted the new element before scrolling
+      setTimeout(() => {
+        qrResultRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' // Centers the QR code perfectly on the screen
+        });
+      }, 100);
+    }
+  }, [qrCodeUrl]);
 
-        {/* --- HEADER --- */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+
+return (
+ <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 p-4 md:p-8 lg:p-12 animate-in fade-in duration-500">
+      <div className="max-w-4xl mx-auto space-y-6 md:space-y-8">
+
+        {/* --- HEURISTIC: User Control & Freedom (Emergency Exit) --- */}
+        <button 
+          onClick={() => navigate(-1)} // Alternatively: navigate('/dashboard') to be strictly safe
+          className="group flex items-center gap-3 text-zinc-500 hover:text-zinc-950 dark:hover:text-white transition-colors w-fit -mt-2 md:-mt-4"
+        >
+          <div className="bg-zinc-200/50 dark:bg-zinc-800/50 p-2 rounded-xl group-hover:bg-zinc-200 dark:group-hover:bg-zinc-800 transition-colors">
+            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+          </div>
+          <span className="text-[10px] font-black uppercase tracking-widest">
+            Back
+          </span>
+        </button>
+
+        {/* --- HEURISTIC: Match System to Real World (No Jargon) --- */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-6">
           <div className="space-y-2">
             <div className="flex items-center gap-3">
-              <div className="bg-orange-600 p-2 rounded-xl shadow-lg shadow-orange-600/20">
-                <QrCode className="w-6 h-6 text-zinc-950" />
+              <div className="bg-orange-600 p-2 rounded-xl text-white shadow-sm">
+                <QrCode className="w-5 h-5" />
               </div>
-              <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-orange-600 italic">
-                Operational Toolkit
+              <h2 className="text-xs font-black uppercase tracking-widest text-orange-600">
+                Payment Setup
               </h2>
             </div>
-            <h1 className="text-5xl md:text-6xl font-black text-zinc-950 dark:text-white tracking-tighter uppercase italic leading-none">
-              Asset <span className="text-zinc-400 dark:text-zinc-700">Provisioning</span>
+            <h1 className="text-4xl md:text-5xl font-black text-zinc-950 dark:text-white uppercase tracking-tighter leading-none">
+              Generate <span className="text-zinc-400 dark:text-zinc-600">QR Code</span>
             </h1>
           </div>
-          <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest md:max-w-[200px] md:text-right">
-            Deploying secure payment nodes for {merchant?.name || 'Merchant'}.
+          <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest md:text-right max-w-[250px]">
+            Create a scannable M-Pesa code for {merchant?.name || 'your store'}.
           </p>
         </div>
 
-        <SubscriptionShield requiredTier="BASIC" featureName="QR Generation">
+        <SubscriptionShield requiredTier="CORE" featureName="QR Generation">
 
-          {/* --- GENERATOR CARD --- */}
-          <div className="relative overflow-hidden bg-orange-600 text-zinc-950 rounded-[3rem] shadow-2xl shadow-orange-600/20 p-8 md:p-12">
-            <div className="relative z-10 space-y-8">
-              <div className="space-y-2">
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-70 italic">Verified Business Profile</p>
-                <h2 className="text-4xl md:text-5xl font-black uppercase italic tracking-tighter leading-none">
-                  {merchant.name || 'Loading Profile...'}
-                </h2>
-                <div className="flex gap-4 pt-2">
-                  <Badge className="bg-zinc-950 text-white border-none px-4 py-1">
-                    Shortcode: {merchant.shortcode || '174379'}
-                  </Badge>
-                  <Badge className="bg-zinc-950/20 text-zinc-900 border-none px-4 py-1 uppercase text-[9px]">
-                    {merchant.accountType || 'PAYBILL'}
-                    {console.log(merchantData)}
-                  </Badge>
-                </div>
-              </div>
-
-              <Button
-                onClick={generateQRData}
-                disabled={loading}
-                // FIXED: Added physical 3D elevation (Gradient + Top Highlight + Tighter Colored Shadow)
-                className="h-20 w-full md:w-auto px-12 bg-gradient-to-b from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white rounded-[2rem] font-black uppercase italic tracking-widest text-sm hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-orange-600/50 hover:shadow-2xl hover:shadow-orange-500/60 border border-orange-700/50 border-t-white/20"
-              >
-                {loading ? (
-                  <Loader2 className="w-6 h-6 animate-spin mr-3 text-white" />
-                ) : (
-                  <Zap className="w-6 h-6 fill-white text-white mr-3" />
-                )}
-                {loading ? 'Synchronizing...' : 'Initialize Payment Asset'}
-              </Button>
-            </div>
-            <QrCode className="absolute -right-12 -bottom-12 h-80 w-80 text-zinc-950 opacity-10 -rotate-12" />
-          </div>
-
-          {/* --- QR RESULT --- */}
-          {qrCodeUrl && (
-            <div className="mt-10 animate-in zoom-in-95 duration-500">
-              <div className="bg-zinc-50 dark:bg-zinc-900/50 border-2 border-zinc-100 dark:border-zinc-800 p-10 md:p-16 flex flex-col items-center space-y-10 shadow-2xl rounded-[4rem]">
-                <div className="relative p-10 bg-white rounded-[3.5rem] shadow-xl">
-                  <img src={qrCodeUrl} alt="Terminal QR" className="w-64 h-64 md:w-80 md:h-80 object-contain" />
-                </div>
-
-                <div className="text-center space-y-4">
-                  <h3 className="text-3xl font-black text-zinc-950 dark:text-white uppercase italic tracking-tighter">
-                    Terminal Asset <span className="text-orange-600">Active</span>
-                  </h3>
-                  <div className="flex justify-center gap-3">
-                    <div className="px-4 py-2 bg-white dark:bg-zinc-800 rounded-xl text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                      ID: {merchant?.uid?.slice(-8).toUpperCase()}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-md">
-                  <Button onClick={downloadQRCode} variant="outline" className="h-16 rounded-2xl gap-2 font-black uppercase text-xs border-zinc-200">
-                    <Download className="w-4 h-4 text-orange-600" /> Export PNG
-                  </Button>
-                  <Button onClick={shareQRCode} variant="outline" className="h-16 rounded-2xl gap-2 font-black uppercase text-xs border-zinc-200">
-                    <Share2 className="w-4 h-4 text-orange-600" /> Share Link
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-
+          {/* --- HEURISTIC: Visibility of System Status (Alerts at the top, where the eye is) --- */}
           {error && (
-            <div className="mt-6 p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-2xl flex items-center gap-3 italic font-black uppercase text-[10px]">
-              <AlertCircle className="w-4 h-4" /> {error}
+            <div className="p-4 bg-red-50 dark:bg-red-900/10 border-l-4 border-red-500 text-red-700 dark:text-red-400 rounded-r-xl flex items-center gap-3 font-bold text-sm animate-in slide-in-from-top-2">
+              <AlertCircle className="w-5 h-5 shrink-0" /> {error}
             </div>
           )}
 
           {success && !error && (
-            <div className="mt-6 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-2xl flex items-center gap-3 italic font-black uppercase text-[10px]">
-              <Zap className="w-4 h-4" /> {success}
+            <div className="p-4 bg-emerald-50 dark:bg-emerald-900/10 border-l-4 border-emerald-500 text-emerald-700 dark:text-emerald-400 rounded-r-xl flex items-center gap-3 font-bold text-sm animate-in slide-in-from-top-2">
+              <CheckCircle className="w-5 h-5 shrink-0" /> {success}
             </div>
           )}
+
+          {/* --- GENERATOR CARD --- */}
+          <div className="relative overflow-hidden bg-white dark:bg-brand-gray border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-lg p-6 md:p-10">
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+              
+              <div className="space-y-4">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Store Profile</p>
+                  <h2 className="text-3xl font-black uppercase tracking-tighter text-zinc-950 dark:text-white">
+                    {merchant?.name || 'Loading Profile...'}
+                  </h2>
+                </div>
+                
+                {/* HEURISTIC: Recognition (Confirming the exact details before generation) */}
+                <div className="flex flex-wrap gap-3">
+                  <Badge className="bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border-zinc-200 dark:border-zinc-700 px-3 py-1 font-mono text-xs">
+                    Shortcode: {merchant?.shortcode || 'N/A'}
+                  </Badge>
+                  <Badge className="bg-orange-50 dark:bg-orange-900/10 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800/30 px-3 py-1 uppercase text-[10px] font-black">
+                    {merchant?.accountType || 'PAYBILL'}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* HEURISTIC: Clear, actionable button text */}
+              <Button
+                onClick={generateQRData}
+                disabled={loading}
+                className="h-14 md:h-16 px-8 w-full md:w-auto bg-orange-600 hover:bg-orange-700 text-white rounded-2xl font-black uppercase tracking-widest text-xs md:text-sm shadow-md disabled:opacity-70 disabled:cursor-not-allowed transition-all active:scale-95 flex items-center justify-center"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin mr-3" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <QrCode className="w-5 h-5 mr-3" />
+                    Generate QR
+                  </>
+                )}
+              </Button>
+            </div>
+            
+            {/* Subtle decorative watermark */}
+            <QrCode className="absolute -right-8 -bottom-8 h-48 w-48 text-zinc-950/5 dark:text-white/5 -rotate-12 pointer-events-none" />
+          </div>
+
+          {/* --- QR RESULT --- */}
+      {/* --- QR RESULT --- */}
+          {qrCodeUrl && (
+            // ATTACH THE REF HERE
+            <div ref={qrResultRef} className="mt-8 animate-in zoom-in-95 duration-500">
+              <div className="bg-white dark:bg-brand-gray border border-zinc-200 dark:border-zinc-800 p-8 md:p-12 flex flex-col items-center space-y-8 shadow-sm rounded-3xl">
+                
+                <div className="text-center">
+                  <h3 className="text-2xl font-black text-zinc-950 dark:text-white uppercase tracking-tighter">
+                    Your QR Code is Ready
+                  </h3>
+                  <p className="text-zinc-500 dark:text-zinc-400 text-xs font-bold uppercase tracking-widest mt-2">
+                    ID: {merchant?.uid?.slice(-8).toUpperCase()}
+                  </p>
+                </div>
+
+                {/* HEURISTIC: Error Prevention (Strictly white background for scanner compatibility) */}
+                <div className="p-6 bg-white rounded-3xl shadow-inner border-2 border-zinc-100">
+                  <img src={qrCodeUrl} alt="Store QR Code" className="w-56 h-56 md:w-72 md:h-72 object-contain" />
+                </div>
+
+                {/* HEURISTIC: Efficiency of Use (Clear export actions) */}
+                <div className="flex flex-col sm:flex-row gap-4 w-full max-w-sm">
+                  <Button 
+                    onClick={downloadQRCode} 
+                    variant="outline" 
+                    className="flex-1 h-14 rounded-xl gap-2 font-bold uppercase tracking-widest text-xs border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                  >
+                    <Download className="w-4 h-4 text-orange-600" /> Save Image
+                  </Button>
+                  <Button 
+                    onClick={shareQRCode} 
+                    variant="outline" 
+                    className="flex-1 h-14 rounded-xl gap-2 font-bold uppercase tracking-widest text-xs border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                  >
+                    <Share2 className="w-4 h-4 text-orange-600" /> Share Link
+                  </Button>
+                </div>
+
+              </div>
+            </div>
+          )}
+
         </SubscriptionShield>
       </div>
     </div>

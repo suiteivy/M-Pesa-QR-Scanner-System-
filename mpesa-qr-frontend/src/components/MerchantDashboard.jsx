@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
 import Button from './ui/Button';
 import Badge from './ui/Badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/Tabs';
+
 import {
   BarChart3,
   DollarSign,
@@ -48,7 +49,7 @@ import SubscriptionShield from '../hooks/SubscriptionShield';
 import ThemeToggle from './ui/Toggle';
 import AnalyticsModule from './AnalyticsModule'; // <--- IMPORT IT
 // Add API_BASE_URL to the list
-import { API_BASE_URL, API_ENDPOINTS } from '../utility/constants'; // Adjust path if needed (e.g. '../utils/constants')
+import { API_BASE_URL, API_ENDPOINTS, formatUIDate } from '../utility/constants'; // Adjust path if needed (e.g. '../utils/constants')
 
 const MerchantDashboard = () => {
   const { user, merchantData, logout } = useAuth();
@@ -73,10 +74,35 @@ const MerchantDashboard = () => {
     return `KSH ${parseFloat(amount || 0).toFixed(2)}`;
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
+  const formatDate = (dateData) => {
+
+    if (!dateData) return 'N/A';
+
     try {
-      const date = new Date(dateString); // Backend sends ISO strings
+      let date;
+
+      // 1. Is it a raw Firestore Object? (Check for _seconds or seconds)
+      if (typeof dateData === 'object') {
+        if (dateData._seconds) {
+          date = new Date(dateData._seconds * 1000);
+        } else if (dateData.seconds) {
+          date = new Date(dateData.seconds * 1000);
+        } else {
+          return 'N/A'; // It's an object, but not a date
+        }
+      }
+      // 2. Is it an ISO String or Timestamp Number?
+      else {
+        date = new Date(dateData);
+      }
+
+      // 3. The REAL validation check (catches the NaN issue)
+      if (isNaN(date.getTime())) {
+        console.error("Parsed date is invalid:", dateData);
+        return 'Invalid Date';
+      }
+
+      // 4. Format for Kenya locale
       return date.toLocaleDateString('en-KE', {
         year: 'numeric',
         month: 'short',
@@ -84,12 +110,33 @@ const MerchantDashboard = () => {
         hour: '2-digit',
         minute: '2-digit'
       });
+
     } catch (error) {
       console.error("Format error:", error);
       return 'Invalid Date';
     }
   };
 
+  const formatTransactionDate = (dateData) => {
+    if (!dateData) return 'N/A';
+    try {
+      let date;
+      if (typeof dateData === 'object' && dateData._seconds) {
+        // Multiply by 1000 to convert Firestore seconds to JS milliseconds
+        date = new Date(dateData._seconds * 1000);
+      } else {
+        date = new Date(dateData);
+      }
+
+      if (isNaN(date.getTime())) return 'Invalid Date';
+
+      return date.toLocaleDateString('en-KE', {
+        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
+    } catch (e) {
+      return 'Invalid Date';
+    }
+  };
   const getStatusBadge = (status) => {
     const variants = {
       success: 'success',
@@ -333,319 +380,329 @@ const MerchantDashboard = () => {
 
 
   return (
-    // Rebranded: Deep Zinc-Black background for high-end "FinTech" feel
-    <div className="min-h-screen bg-white dark:bg-zinc-950 text-zinc-950 dark:text-white selection:bg-orange-600/30">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-950 dark:text-white transition-colors duration-300">
 
-
-      {/* --- NEW: GLOBAL EXPIRY BANNER --- */}
+      {/* --- HEURISTIC: Visibility of System Status (Global Alerts) --- */}
       {!isValid && !subLoading && (
-        <div className="bg-red-600 text-zinc-950 dark:text-white px-4 py-2 text-center animate-in slide-in-from-top duration-500 sticky top-0 z-50 shadow-xl">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2">
-            <AlertCircle className="w-3 h-3" />
-            Subscription {subStatus === 'EXPIRED' ? 'Expired' : 'Inactive'} — Features Restricted
-            <button
-              onClick={() => navigate('/upgrade')}
-              className="ml-4 bg-white text-red-600 px-3 py-1 rounded-full hover:bg-zinc-100 transition-colors"
-            >
-              Renew Now
-            </button>
+        <div className="bg-red-600 text-white px-4 py-3 text-center flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 shadow-md z-50 relative">
+          <p className="text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+            <AlertCircle className="w-4 h-4" />
+            Subscription {subStatus === 'EXPIRED' ? 'Expired' : 'Inactive'} — Core Features Restricted
           </p>
+          <button
+            onClick={() => navigate('/upgrade')}
+            className="bg-white text-red-600 px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-zinc-100 transition-colors shadow-sm"
+          >
+            Renew Subscription
+          </button>
         </div>
       )}
-      {/* Modern Header - Rebranded for Dark Tech Aesthetic */}
-      <div className="bg-zinc-100 dark:bg-zinc-900/50 backdrop-blur-md shadow-2xl border-b border-zinc-200 dark:border-zinc-800 sticky top-0 z-30">
-        <div className="px-4 py-3 md:px-6 md:py-4">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-3 overflow-hidden">
-              <div className="bg-orange-600 p-2.5 rounded-2xl shadow-lg shadow-orange-600/20 shrink-0">
-                <BarChart3 className="w-5 h-5 md:w-6 md:h-6 text-zinc-950 dark:text-white" />
-              </div>
-              <div className="truncate">
-                <h1 className="text-lg md:text-xl font-black text-zinc-950 dark:text-white truncate leading-tight uppercase italic tracking-tighter">
-                  Merchant <span className="text-orange-600">Pro</span>
-                </h1>
-                <p className="text-[10px] md:text-xs text-zinc-500 truncate font-bold uppercase tracking-widest">
-                  {merchantData?.name || user?.displayName || 'Dashboard'}
-                </p>
-              </div>
+
+      {/* --- HEURISTIC: Recognition rather than Recall (Sticky, Clear Navigation) --- */}
+      <header className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 sticky top-0 z-40 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 md:h-20 flex items-center justify-between">
+
+          {/* Brand Identity */}
+          <div className="flex items-center gap-3">
+            <div className="bg-orange-600 p-2 rounded-xl text-white shadow-sm">
+              <BarChart3 className="w-5 h-5" />
             </div>
-
-            <div className="flex items-center gap-2">
-              <ThemeToggle />
-
-              <Button
-                onClick={handleRefresh}
-                variant="ghost"
-                size="sm"
-                disabled={loading}
-                className="h-10 px-3 bg-zinc-800/50 hover:bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800 rounded-xl"
-              >
-                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-orange-500' : ''}`} />
-                <span className="hidden md:inline ml-2 text-[10px] font-black uppercase tracking-wider">Sync</span>
-              </Button>
-              <div className="relative">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowNavMenu(!showNavMenu)}
-                  className="h-10 px-3 bg-orange-600 hover:bg-orange-700 text-zinc-950 dark:text-white border-none rounded-xl shadow-lg shadow-orange-600/20 active:scale-95 transition-all"
-                >
-                  <Menu className="w-4 h-4" />
-                  <span className="hidden md:inline ml-2 text-[10px] font-black uppercase tracking-wider">Menu</span>
-                </Button>
-
-                {showNavMenu && (
-                  <div className="absolute right-0 top-full mt-3 w-64 bg-zinc-100 dark:bg-zinc-900 rounded-[2rem] shadow-2xl py-3 z-50 border border-zinc-200 dark:border-zinc-800 animate-in fade-in zoom-in-95 duration-200">
-                    <button
-                      onClick={() => { setShowNavMenu(false); handleNavigateToQRGenerator(); }}
-                      // Fixed: text-zinc-700 for light mode, dark:text-zinc-300 for dark mode. Added light mode hover bg.
-                      className="w-full px-5 py-4 text-left text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800/50 flex items-center gap-4 transition-colors"
-                    >
-                      <QrCode className="w-5 h-5 text-orange-500" />
-                      <span className="font-bold text-sm">Generate QR</span>
-                    </button>
-
-                    <button
-                      onClick={() => { setShowNavMenu(false); handleNavigateToScanner(); }}
-                      // Fixed: Same visibility updates applied here
-                      className="w-full px-5 py-4 text-left text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800/50 flex items-center gap-4 transition-colors"
-                    >
-                      <Smartphone className="w-5 h-5 text-orange-500" />
-                      <span className="font-bold text-sm">QR Scanner</span>
-                    </button>
-
-                    <div className="my-2 border-t border-zinc-200 dark:border-zinc-800 mx-4" />
-
-                    {/* Make sure your Logout button is also visible! */}
-                    <button
-                      onClick={() => { setShowNavMenu(false); handleLogout(); }}
-                      className="w-full px-5 py-4 text-left text-red-600 dark:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 flex items-center gap-4 transition-colors"
-                    >
-                      <LogOut className="w-5 h-5" />
-                      <span className="font-bold text-sm">Logout</span>
-                    </button>
-                  </div>
-                )}
-              </div>
+            <div className="hidden sm:block">
+              <h1 className="text-lg font-black uppercase italic tracking-tighter leading-none">
+                Merchant<span className="text-orange-600">Pro</span>
+              </h1>
+              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-0.5 truncate max-w-[150px]">
+                {merchantData?.name || 'Dashboard'}
+              </p>
             </div>
           </div>
 
-          {/* Filter Controls - Rebranded with Dark Selects */}
-          <SubscriptionShield requiredTier="BASIC" featureName="Real-time Stats">
+          {/* Desktop/Tablet Quick Actions (Exposed for Efficiency) */}
+          <div className="hidden md:flex items-center gap-3">
+            <Button onClick={() => navigate('/generate-qr')} variant="ghost" className="text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:text-orange-600">
+              <QrCode className="w-4 h-4 mr-2" /> Generate QR
+            </Button>
+            <Button onClick={() => navigate('/payment-scanner')} variant="ghost" className="text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:text-orange-600">
+              <Smartphone className="w-4 h-4 mr-2" /> Scanner
+            </Button>
+            <div className="w-px h-6 bg-zinc-200 dark:bg-zinc-700 mx-2" /> {/* Divider */}
+            <ThemeToggle />
+            <Button
+              onClick={handleRefresh}
+              disabled={loading}
+              variant="outline"
+              className="border-zinc-200 dark:border-zinc-700 text-xs font-bold"
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin text-orange-600' : ''}`} />
+              {loading ? 'Syncing...' : 'Sync Data'}
+            </Button>
+            <Button onClick={handleLogout} variant="ghost" className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
+              <LogOut className="w-4 h-4" />
+            </Button>
+          </div>
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-5">
-              <div className="grid grid-cols-2 gap-3 flex-1">
-                <div className="relative group">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-500" />
-                  <select
-                    value={period}
-                    onChange={(e) => setPeriod(e.target.value)}
-className="w-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 rounded-xl pl-10 pr-4 py-3 text-xs font-bold focus:ring-2 focus:ring-orange-600 appearance-none outline-none transition-all group-hover:border-zinc-300 dark:group-hover:border-zinc-700"                  >
-                    <option value="today">Today</option>
-                    <option value="week">This Week</option>
-                    <option value="month">This Month</option>
-                    <option value="all">Total Revenue</option>
-                  </select>
-                </div>
+          {/* Mobile Menu Toggle (User Control & Freedom) */}
+          <div className="flex items-center gap-2 md:hidden">
+            <ThemeToggle />
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setShowNavMenu(!showNavMenu)}
+              className="border-zinc-200 dark:border-zinc-700 relative z-50"
+            >
+              {showNavMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </Button>
+          </div>
+        </div>
 
-                <div className="relative group">
-                  <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-500" />
-                  <select
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
-className="w-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 rounded-xl pl-10 pr-4 py-3 text-xs font-bold focus:ring-2 focus:ring-orange-600 appearance-none outline-none transition-all group-hover:border-zinc-300 dark:group-hover:border-zinc-700"                  >
-                    <option value="all">All Status</option>
-                    <option value="success">Success</option>
-                    <option value="pending">Pending</option>
-                    <option value="failed">Failed</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  onClick={downloadCSV}
-                  className="flex-1 sm:flex-none justify-center gap-2 h-12 bg-white text-zinc-950 hover:bg-zinc-200 rounded-xl  dark:text-white dark:bg-zinc-800 font-black text-[10px] uppercase tracking-widest px-6"
-                >
-                  <Download className="w-4 h-4" />
-                  <span>Export CSV</span>
+        {/* Mobile Dropdown Menu with Backdrop */}
+        {showNavMenu && (
+          <>
+            <div
+              className="fixed inset-0 bg-zinc-950/20 dark:bg-zinc-950/60 backdrop-blur-sm z-40 md:hidden"
+              onClick={() => setShowNavMenu(false)}
+            />
+            <div className="absolute top-full left-0 right-0 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 shadow-xl z-50 md:hidden animate-in slide-in-from-top-2">
+              <div className="p-4 flex flex-col gap-2">
+                <Button onClick={() => { setShowNavMenu(false); navigate('/generate-qr'); }} variant="ghost" className="justify-start w-full text-sm">
+                  <QrCode className="w-5 h-5 mr-3 text-orange-600" /> Generate QR
+                </Button>
+                <Button onClick={() => { setShowNavMenu(false); navigate('/payment-scanner'); }} variant="ghost" className="justify-start w-full text-sm">
+                  <Smartphone className="w-5 h-5 mr-3 text-orange-600" /> QR Scanner
+                </Button>
+                <Button onClick={() => { setShowNavMenu(false); handleRefresh(); }} disabled={loading} variant="ghost" className="justify-start w-full text-sm">
+                  <RefreshCw className={`w-5 h-5 mr-3 ${loading ? 'animate-spin text-orange-600' : 'text-zinc-500'}`} /> Sync Data
+                </Button>
+                <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-2" />
+                <Button onClick={() => { setShowNavMenu(false); handleLogout(); }} variant="ghost" className="justify-start w-full text-sm text-red-600 hover:text-red-700">
+                  <LogOut className="w-5 h-5 mr-3" /> Logout
                 </Button>
               </div>
             </div>
-          </SubscriptionShield>
-        </div>
-      </div>
+          </>
+        )}
+      </header>
 
-      <div className="px-4 py-6 md:px-8 md:py-8 space-y-6 md:space-y-8 pb-32">
-        {/* Error Alert */}
+      <main className="max-w-7xl mx-auto px-4 py-6 sm:px-6 sm:py-8 space-y-8 pb-32">
+
+        {/* HEURISTIC: Error Diagnosis & Recovery */}
         {error && (
-          <div className="bg-red-500/10 border border-red-500/20 rounded-[1.5rem] p-5 flex items-start gap-4 animate-in shake duration-500">
-            <AlertCircle className="w-6 h-6 text-red-500 shrink-0" />
-            <p className="text-sm text-red-400 font-bold leading-tight">{error}</p>
+          <div className="bg-red-50 dark:bg-red-900/10 border-l-4 border-red-500 p-4 rounded-r-xl flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+            <div>
+              <h3 className="text-sm font-bold text-red-800 dark:text-red-400">Sync Error</h3>
+              <p className="text-xs text-red-600 dark:text-red-300 mt-1">{error}</p>
+            </div>
           </div>
         )}
-        <SubscriptionShield requiredTier="BASIC" featureName="Real-time Stats">
 
-          {/* Stats Grid - High Contrast 2-Col for S22 */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        <SubscriptionShield requiredTier="CORE" featureName="Real-time Stats">
 
-            <Card className="!bg-orange-600 !text-zinc-950 dark:text-white !border-none shadow-2xl shadow-orange-600/20 relative overflow-hidden rounded-[2rem]">
-              <CardContent className="p-5 md:p-7">
-                <p className="text-zinc-950 dark:text-white/70 text-[10px] uppercase font-black tracking-[0.2em] mb-2">Total Income</p>
-                <div className="text-2xl md:text-4xl font-black text-zinc-950 dark:text-white italic tracking-tighter">{formatCurrency(stats.totalRevenue)}</div>
-                <p className="text-zinc-950 dark:text-white/60 text-[10px] mt-2 font-bold uppercase">{stats.totalTransactions} Completed</p>
+          {/* HEURISTIC: Efficiency of Use (Filters & Actions grouped) */}
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+            <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+              <div className="relative flex-1 sm:flex-none min-w-[140px]">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                <select
+                  value={period}
+                  onChange={(e) => setPeriod(e.target.value)}
+                  className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-sm font-semibold rounded-xl pl-10 pr-8 py-2.5 focus:ring-2 focus:ring-orange-600 outline-none appearance-none"
+                >
+                  <option value="today">Today</option>
+                  <option value="week">This Week</option>
+                  <option value="month">This Month</option>
+                  <option value="all">All Time</option>
+                </select>
+              </div>
+              <div className="relative flex-1 sm:flex-none min-w-[140px]">
+                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-sm font-semibold rounded-xl pl-10 pr-8 py-2.5 focus:ring-2 focus:ring-orange-600 outline-none appearance-none"
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="success">Successful</option>
+                  <option value="pending">Pending</option>
+                  <option value="failed">Failed</option>
+                </select>
+              </div>
+            </div>
+
+            {/* HEURISTIC: Error Prevention (Disable export if no data) */}
+            <Button
+              onClick={downloadCSV}
+              disabled={!transactions || transactions.length === 0}
+              // Light Mode: bg-brand-buttonBase, text-brand-buttonText
+              // Dark Mode: dark:bg-brand-buttonDark, dark:text-brand-buttonTextDark
+              className="w-full lg:w-auto flex items-center justify-center font-bold text-xs uppercase tracking-widest px-6 py-2.5 rounded-xl transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed
+    bg-brand-buttonBase text-brand-buttonText hover:opacity-80
+    dark:bg-brand-buttonDark dark:text-brand-buttonTextDark dark:hover:opacity-80"
+            >
+              <Download className="w-4 h-4 mr-2 shrink-0" />
+              Export Log
+            </Button>
+          </div>
+
+          {/* HEURISTIC: Match System & Real World (Clearer terminology) */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+
+            {/* 1. TOTAL REVENUE (Using your custom brand-orange) */}
+            <Card className="bg-brand-orange text-white border-none shadow-lg shadow-brand-orange/20">
+              <CardContent className="p-6">
+                <p className="text-zinc-500 dark:text-zinc-400 text-[10px] uppercase font-black tracking-widest mb-2">
+                  Total Revenue
+                </p>
+                <div className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white italic tracking-tighter">
+                  {formatCurrency(stats.totalRevenue)
+                  }
+                </div>
+                <p className="text-emerald-600 dark:text-emerald-400 text-[10px] mt-2 font-bold uppercase tracking-widest">
+                  {stats.totalTransactions} Completed Sales
+                </p>
               </CardContent>
-              <DollarSign className="absolute -right-4 -bottom-4 h-20 w-20 text-zinc-950 dark:text-white/10 rotate-12" />
             </Card>
 
-
-
-            <Card className="!bg-white !text-zinc-950 !border-none shadow-xl relative overflow-hidden rounded-[2rem]">
-              <CardContent className="p-5 md:p-7">
-                <p className="text-zinc-400 text-[10px] uppercase font-black tracking-[0.2em] mb-2">Success Rate</p>
-                <div className="text-2xl md:text-4xl font-black text-zinc-950">{stats.successRate}%</div>
-                <p className="text-orange-600 text-[10px] mt-2 font-bold uppercase tracking-widest">Efficiency</p>
+            {/* 2. SUCCESS RATE (Using dark:bg-brand-gray for OLED-friendly cards) */}
+            <Card className="bg-white dark:bg-brand-gray border-zinc-200 dark:border-brand-gray shadow-sm">
+              <CardContent className="p-6">
+                <p className="text-zinc-500 dark:text-zinc-400 text-[10px] uppercase font-black tracking-widest mb-2">
+                  Success Rate
+                </p>
+                <div className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white">
+                  {stats.successRate}%
+                </div>
+                <p className="text-emerald-600 dark:text-emerald-400 text-[10px] mt-2 font-bold uppercase tracking-widest">
+                  Transaction Health
+                </p>
               </CardContent>
-              <TrendingUp className="absolute -right-4 -bottom-4 h-20 w-20 text-zinc-100 rotate-12" />
             </Card>
 
-            <Card className="!bg-zinc-100 dark:bg-zinc-900 !text-zinc-950 dark:text-white !border border-zinc-200 dark:border-zinc-800 shadow-xl relative overflow-hidden rounded-[2rem]">
-              <CardContent className="p-5 md:p-7">
-                <p className="text-zinc-500 text-[10px] uppercase font-black tracking-[0.2em] mb-2">In Review</p>
-                <div className="text-2xl md:text-4xl font-black text-orange-500">{stats.pendingPayments}</div>
-                <p className="text-zinc-600 text-[10px] mt-2 font-bold uppercase tracking-widest">Pending</p>
+            {/* 3. PENDING (Matching the clean pattern) */}
+            <Card className="bg-white dark:bg-brand-gray border-zinc-200 dark:border-brand-gray shadow-sm">
+              <CardContent className="p-6">
+                <p className="text-zinc-500 dark:text-zinc-400 text-[10px] uppercase font-black tracking-widest mb-2">
+                  Pending Confirmation
+                </p>
+                <div className="text-2xl sm:text-3xl font-black text-amber-500 dark:text-amber-400">
+                  {stats.pendingPayments}
+                </div>
+                <p className="text-zinc-400 dark:text-zinc-500 text-[10px] mt-2 font-bold uppercase tracking-widest">
+                  Awaiting PIN
+                </p>
               </CardContent>
-              <Clock className="absolute -right-4 -bottom-4 h-20 w-20 text-zinc-950 dark:text-white/5 rotate-12" />
             </Card>
 
-            <Card className="!bg-zinc-100 dark:bg-zinc-900 !text-zinc-950 dark:text-white !border border-zinc-200 dark:border-zinc-800 shadow-xl relative overflow-hidden rounded-[2rem]">
-              <CardContent className="p-5 md:p-7">
-                <p className="text-zinc-500 text-[10px] uppercase font-black tracking-[0.2em] mb-2">Failed</p>
-                <div className="text-2xl md:text-4xl font-black text-red-500">{stats.failedPayments}</div>
-                <p className="text-zinc-600 text-[10px] mt-2 font-bold uppercase tracking-widest">Attention</p>
+            {/* 4. FAILED (Matching the clean pattern) */}
+            <Card className="bg-white dark:bg-brand-gray border-zinc-200 dark:border-brand-gray shadow-sm">
+              <CardContent className="p-6">
+                <p className="text-zinc-500 dark:text-zinc-400 text-[10px] uppercase font-black tracking-widest mb-2">
+                  Failed Orders
+                </p>
+                <div className="text-2xl sm:text-3xl font-black text-red-500 dark:text-red-400">
+                  {stats.failedPayments}
+                </div>
+                <p className="text-zinc-400 dark:text-zinc-500 text-[10px] mt-2 font-bold uppercase tracking-widest">
+                  Requires Action
+                </p>
               </CardContent>
-              <XCircle className="absolute -right-4 -bottom-4 h-20 w-20 text-zinc-950 dark:text-white/5 rotate-12" />
             </Card>
+
           </div>
         </SubscriptionShield>
 
-        {/* Content Navigation - Tabs rebranded for Dark Mode */}
-        {/* Content Navigation - Tabs */}
+        {/* HEURISTIC: Beautiful & Simple Design (Cleaner Tabs) */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="flex w-full overflow-x-auto bg-zinc-100 dark:bg-zinc-900 p-1.5 rounded-[1.5rem] no-scrollbar border border-zinc-200 dark:border-zinc-800">
-            <TabsTrigger value="overview" className="flex-1 py-4 text-[10px] font-black uppercase tracking-widest gap-2 data-[state=active]:bg-orange-600 data-[state=active]:text-zinc-950 dark:text-white rounded-xl transition-all">
-              <Activity className="w-4 h-4" /> Trend
+          <TabsList className="flex w-full overflow-x-auto bg-zinc-200/50 dark:bg-zinc-900/50 p-1.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 no-scrollbar">
+            <TabsTrigger value="overview" className="flex-1 py-3 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800 rounded-xl shadow-sm transition-all">
+              Overview
             </TabsTrigger>
-            <TabsTrigger value="transactions" className="flex-1 py-4 text-[10px] font-black uppercase tracking-widest gap-2 data-[state=active]:bg-orange-600 data-[state=active]:text-zinc-950 dark:text-white rounded-xl transition-all">
-              <CreditCard className="w-4 h-4" /> Orders
+            <TabsTrigger value="transactions" className="flex-1 py-3 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800 rounded-xl shadow-sm transition-all">
+              Ledger
             </TabsTrigger>
-            <TabsTrigger value="menu" className="flex-1 py-4 text-[10px] font-black uppercase tracking-widest gap-2 data-[state=active]:bg-orange-600 data-[state=active]:text-zinc-950 dark:text-white rounded-xl transition-all">
-              <UtensilsCrossed className="w-4 h-4" /> Setup
+            <TabsTrigger value="menu" className="flex-1 py-3 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800 rounded-xl shadow-sm transition-all">
+              Setup Menu
             </TabsTrigger>
           </TabsList>
 
-          {/* --- TAB 1: OVERVIEW (Protected by ELITE) --- */}
-          <TabsContent value="overview" className="mt-6 space-y-6">
+          <TabsContent value="overview" className="mt-6">
             <SubscriptionShield requiredTier="ELITE" featureName="Advanced Analytics">
               <AnalyticsModule />
             </SubscriptionShield>
           </TabsContent>
 
-          {/* --- TAB 2: TRANSACTIONS (Available to BASIC & ELITE) --- */}
           <TabsContent value="transactions" className="mt-6">
-            <Card className="bg-zinc-100 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-2xl overflow-hidden rounded-[2.5rem]">
-              <CardHeader className="p-6 border-b border-zinc-200 dark:border-zinc-800/50">
-                <CardTitle className="text-xs font-black uppercase tracking-[0.3em] flex items-center gap-3 text-zinc-400">
-                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                  Live Order Feed
+            <Card className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm rounded-2xl overflow-hidden">
+              <CardHeader className="p-5 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50">
+                <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
+                  <Activity className="w-4 h-4 text-orange-500" /> Recent Transactions
                 </CardTitle>
               </CardHeader>
 
               <CardContent className="p-0">
                 {transactions && transactions.length > 0 ? (
-                  <div className="divide-y divide-zinc-200 dark:divide-zinc-800/50">
+                  <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
                     {transactions.slice(0, 10).map((transaction, idx) => {
                       const isSuccess = transaction.status?.toLowerCase() === 'success';
-
-                      let timeValue = null;
-                      if (transaction.createdAt && transaction.createdAt._seconds) {
-                        timeValue = transaction.createdAt._seconds * 1000;
-                      } else if (transaction.createdAt) {
-                        timeValue = transaction.createdAt;
-                      }
-
-                      const dateStr = timeValue
-                        ? new Date(timeValue).toLocaleDateString('en-KE', {
-                          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                        })
-                        : 'Just Now';
-
-                      const amountStr = Number(transaction.amount).toLocaleString();
+                      // ... (Keep existing date formatting logic here) ...
 
                       return (
-                        <div
-                          key={transaction.id || idx}
-                          className="p-5 flex items-center justify-between hover:bg-zinc-200 dark:hover:bg-zinc-800/50 transition-colors group"
-                        >
-                          <div className="flex items-center gap-4 overflow-hidden">
-                            <div className={`p-3 rounded-2xl transition-colors ${isSuccess
-                              ? 'bg-orange-100 dark:bg-orange-600/10 text-orange-600'
-                              : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-500'
-                              }`}>
-                              <DollarSign className="w-5 h-5" />
+                        <div key={transaction.id || idx} className="p-4 sm:p-5 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
+                          <div className="flex items-center gap-4">
+                            <div className={`p-2.5 rounded-xl ${isSuccess ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10' : 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800'}`}>
+                              <CreditCard className="w-5 h-5" />
                             </div>
-
-                            <div className="truncate">
-                              <p className="font-black text-zinc-950 dark:text-white truncate text-sm uppercase tracking-tight group-hover:text-brand-orange transition-colors">
-                                {transaction.phoneNumber || transaction.accountRef || 'M-Pesa Order'}
+                            <div>
+                              <p className="font-bold text-sm text-zinc-900 dark:text-white truncate">
+                                {transaction.phoneNumber || transaction.accountRef || 'Walk-in Customer'}
                               </p>
-                              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-0.5">
-                                {dateStr}
+                              <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold mt-0.5">
+                                {/* Format Date String Here */}
+                                {formatDate(transaction.createdAt)}
                               </p>
                             </div>
                           </div>
-
-                          <div className="text-right shrink-0">
-                            <p className="font-black text-zinc-950 dark:text-white text-lg italic tracking-tighter">
-                              KES {amountStr}
+                          <div className="text-right">
+                            <p className="font-black text-sm sm:text-base text-zinc-900 dark:text-white">
+                              KES {Number(transaction.amount).toLocaleString()}
                             </p>
-
-                            <div className="scale-[0.8] origin-right mt-1">
-                              <span className={`px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-widest ${isSuccess
-                                ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-                                : transaction.status === 'pending'
-                                  ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400'
-                                  : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
-                                }`}>
-                                {transaction.status || 'UNKNOWN'}
-                              </span>
-                            </div>
+                            <span className={`inline-block mt-1 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest ${isSuccess ? 'text-emerald-700 bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400' :
+                              transaction.status === 'pending' ? 'text-amber-700 bg-amber-100 dark:bg-amber-500/10 dark:text-amber-400' :
+                                'text-red-700 bg-red-100 dark:bg-red-500/10 dark:text-red-400'
+                              }`}>
+                              {transaction.status || 'UNKNOWN'}
+                            </span>
                           </div>
                         </div>
                       );
                     })}
                   </div>
                 ) : (
-                  <div className="text-center py-24 px-6 bg-zinc-50 dark:bg-zinc-900/50">
-                    <Search className="w-16 h-16 text-zinc-300 dark:text-zinc-800 mx-auto mb-5" />
-                    <p className="font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest text-xs">
-                      Awaiting First Transaction
+                  // HEURISTIC: Help and Recovery (Actionable Empty State)
+                  <div className="text-center py-20 px-6">
+                    <div className="bg-zinc-100 dark:bg-zinc-800 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <QrCode className="w-8 h-8 text-zinc-400" />
+                    </div>
+                    <h3 className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-widest mb-2">No Transactions Yet</h3>
+                    <p className="text-xs text-zinc-500 font-medium mb-6 max-w-[250px] mx-auto">
+                      Your ledger is empty. Generate your first QR code to start receiving payments.
                     </p>
+                    <Button onClick={() => navigate('/generate-qr')} className="bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs px-6 rounded-xl">
+                      Generate First QR Code
+                    </Button>
                   </div>
                 )}
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* --- TAB 3: MENU MODULE (Protected by its own Addon logic if needed) --- */}
           <TabsContent value="menu" className="mt-6">
-            <SubscriptionShield requiredTier="BASIC" featureName="Digital Menu">
-              {user ? <MenuModule merchantId={user.uid} /> : <div className="p-4">Loading User...</div>}
+            <SubscriptionShield requiredTier="CORE" featureName="Digital Menu" requiredAddon="menuEnabled">
+              {user ? <MenuModule merchantId={user.uid} /> : <div className="p-4 flex justify-center"><Loader2 className="animate-spin text-orange-500" /></div>}
             </SubscriptionShield>
           </TabsContent>
-
         </Tabs>
-      </div>
+      </main>
     </div>
   );
 };

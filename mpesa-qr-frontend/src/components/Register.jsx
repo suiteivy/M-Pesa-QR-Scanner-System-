@@ -135,10 +135,13 @@ function Register() {
 
                 <div className="space-y-5 relative z-10 mt-6 md:mt-0">
                   <div className="flex gap-3 md:gap-4 items-center">
-                    <div className="p-1.5 md:p-2 bg-zinc-900 rounded-lg"><Shield className="w-4 h-4 md:w-5 md:h-5 text-emerald-500" /></div>
-                    <div>
-                      <p className="text-[10px] md:text-xs font-black uppercase text-white">Sandbox Mode</p>
-                      <p className="text-[8px] md:text-[10px] text-zinc-500 font-medium">Testing Environment Active</p>
+                    <div className="p-1.5 md:p-2 bg-zinc-900 rounded-lg"><Shield className="w-4 h-4 md:w-5 md:h-5 text-emerald-500" />
+                    
+                    </div>
+                      <div className="text-[10px] md:text-xs text-emerald-500 uppercase tracking-widest font-bold">
+                      256-bit SSL Encryption
+                  
+                 
                     </div>
                   </div>
                 </div>
@@ -253,7 +256,6 @@ function Register() {
                   <div className="space-y-5 md:space-y-6 animate-in slide-in-from-right duration-500">
                     <div className="space-y-1">
                       <h3 className="text-lg md:text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">Select Power Level</h3>
-                      <p className="text-[10px] md:text-xs text-zinc-500 font-medium">Sandbox: No payment will be processed</p>
                     </div>
 
                     <div className="grid grid-cols-1 gap-3">
@@ -345,7 +347,7 @@ function Register() {
                           </div>
                         ) : (
                           <div className="flex items-center justify-center w-full px-4">
-                            <span className="font-black uppercase tracking-widest text-[10px] md:text-xs">Activate Sandbox Account</span>
+                            <span className="font-black uppercase tracking-widest text-[10px] md:text-xs">Activate Account</span>
                           </div>
                         )}
                       </Button>
