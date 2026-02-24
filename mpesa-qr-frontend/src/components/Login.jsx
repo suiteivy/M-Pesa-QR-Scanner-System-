@@ -115,6 +115,8 @@ const Login = () => {
     e.preventDefault();
     executeAuth(email, password);
   };
+  
+
 
   // --- UI: AUTOMATIC LOGIN STATE ---
   if (isAutoLoggingIn) {
