@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { API_BASE_URL } from '../utility/constants';
 import MenuView from '../components/MenuView';
-import { Utensils, AlertCircle, X, Smartphone, Loader2, Info } from 'lucide-react';
+import { Utensils, AlertCircle, X, Smartphone, Loader2, Info,Zap,Lock} from 'lucide-react';
 
 const PublicMenuPage = () => {
     const { merchantId } = useParams();

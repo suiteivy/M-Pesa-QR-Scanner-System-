@@ -13,6 +13,7 @@ qr-payment-8a0f0-firebase-adminsdk*.json
 !package-lock.json
 .env
 mpesa-qr-backend/src/qr-payment-adminsdk.json
+mpesa-qr-backend/src/qr-payment-calender.json
 .env
 node_modules/
 

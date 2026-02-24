@@ -6,6 +6,7 @@ node_modules/
 src/config/serviceAccountKey.json
 src/config/qr-payment-8a0f0-firebase-adminsdk*.json
 src/config/qr-payment-adminsdk-*.json
+s/qr-payment-calender-*.json
 
 
 !package.json
