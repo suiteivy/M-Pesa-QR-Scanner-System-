@@ -300,22 +300,10 @@ return (
   {/* Secondary Actions: Emails Stacked */}
   <div className="flex flex-col gap-1.5 items-center md:items-end mt-1">
     <a
-      href="mailto:support@cloudora.live"
+      href="mailto:cloudoraltd@gmail.com"
       className="text-xs font-bold tracking-wider text-content-main dark:text-content-mainDark hover:text-brand-orange transition-colors"
     >
-      support@cloudora.live
-    </a>
-    <a
-      href="mailto:mpesaqr@cloudora.live"
-      className="text-xs font-bold tracking-wider text-content-main dark:text-content-mainDark hover:text-brand-orange transition-colors"
-    >
-      mpesaqr@cloudora.live
-    </a>
-    <a
-      href="mailto:contact@cloudora.live"
-      className="text-xs font-bold tracking-wider text-content-main dark:text-content-mainDark hover:text-brand-orange transition-colors"
-    >
-      contact@cloudora.live
+      cloudoraltd@gmail.com
     </a>
   </div>
 </div>

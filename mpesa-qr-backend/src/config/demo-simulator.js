@@ -75,17 +75,19 @@ const injectLiveTransaction = async () => {
 // --- THE TIMING ENGINE (25 TRANSACTIONS PER HOUR) ---
   // Average of 1 transaction every 2.4 minutes (144,000 ms).
   // Randomizing between 2 and 2.8 minutes for organic traffic flow.
-  const minDelay = 120000; // 2 minutes in ms
-  const maxDelay = 168000; // 2.8 minutes in ms
-  const nextDelay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
+  // --- Updated Delay Configuration (20 to 50 Minutes) ---
+const minDelay = 1200000; // 20 minutes in ms
+const maxDelay = 3000000; // 50 minutes in ms
 
-  const minutes = Math.floor(nextDelay / 60000);
-  const seconds = ((nextDelay % 60000) / 1000).toFixed(0);
+const nextDelay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
 
-  console.log(`⏳ Next transaction arriving in ${minutes}m ${seconds}s...`);
+const minutes = Math.floor(nextDelay / 60000);
+const seconds = Math.floor((nextDelay % 60000) / 1000);
 
-  // Recursively call itself after the random delay
-  setTimeout(injectLiveTransaction, nextDelay);
+console.log(`⏳ Next transaction arriving in ${minutes}m ${seconds}s...`);
+
+// Recursively call itself after the random delay
+setTimeout(injectLiveTransaction, nextDelay);
 };
 
 // Export the trigger for your server.js to use

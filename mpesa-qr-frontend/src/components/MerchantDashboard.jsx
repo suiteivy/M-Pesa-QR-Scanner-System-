@@ -102,21 +102,40 @@ const MerchantDashboard = () => {
     URL.revokeObjectURL(url);
   };
 
-  const fetchAnalytics = async () => {
+const fetchAnalytics = async () => {
     if (!user) return;
     setLoading(true);
     setError('');
+    
     try {
       const token = await user.getIdToken();
-      const params = new URLSearchParams({ period, status, includeQRMetrics: 'true', limit: '100' });
-      const response = await axios.get(`${API_BASE_URL}/api/transactions/analytics?${params}`, {
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' }
+      
+      // 🚀 Reverted: Pass the period natively without custom overrides
+      const params = new URLSearchParams({ 
+        period, 
+        status, 
+        includeQRMetrics: 'true', 
+        limit: '100' 
       });
+
+      const response = await axios.get(`${API_BASE_URL}/api/transactions/analytics?${params}`, {
+        headers: { 
+          'Authorization': `Bearer ${token}`, 
+          'Content-Type': 'application/json', 
+          'ngrok-skip-browser-warning': 'true' 
+        }
+      });
+      
       if (response.data.status === 'success') {
         if (response.data.analytics) setAnalytics(response.data.analytics);
         if (response.data.transactions) setTransactions(response.data.transactions);
-        else setTransactions([]);
+        console.log('📊 Analytics Data:', response.data.analytics);
+        console.log('📊 Transactions Data:', response.data.transactions);
+      } else {
+        setTransactions([]);
+        
       }
+        
     } catch (err) {
       if (err.response?.status === 401) setError('Session expired. Please re-login.');
       else setError(err.response?.data?.error || 'Failed to fetch analytics data');
@@ -138,21 +157,44 @@ const MerchantDashboard = () => {
   };
 
   useEffect(() => {
-    if (user) fetchAnalytics();
-  }, [user, status, period]);
+  if (user) {
+    fetchAnalytics();
+  }
+  // The effect will re-run whenever the user logs in, 
+  // or when the status/period filters are changed by the UI.
+}, [user, status, period]);
 
-  const stats = analytics ? {
-    totalRevenue: analytics.summary?.totalRevenue || 0,
-    totalTransactions: analytics.summary?.totalTransactions || 0,
-    successfulPayments: analytics.summary?.successfulTransactions || 0,
-    pendingPayments: analytics.summary?.pendingTransactions || 0,
-    failedPayments: analytics.summary?.failedTransactions || 0,
-    successRate: analytics.summary?.successRate || 0
-  } : {
-    totalRevenue: 0, totalTransactions: 0, successfulPayments: 0, pendingPayments: 0, failedPayments: 0, successRate: 0
-  };
+const stats = analytics ? {
+  totalRevenue: analytics.summary?.totalRevenue || 0,
+  totalTransactions: analytics.summary?.totalTransactions || 0,
+  
+  // Logic: Filter the returned transaction list by status to get counts
+  // This works perfectly with your dropdown because 'transactions' respects the limit and period
+  successfulPayments: transactions.filter(t => t.status === 'success').length,
+  pendingPayments: transactions.filter(t => t.status === 'pending').length,
+  failedPayments: transactions.filter(t => t.status === 'failed' || t.status === 'error').length,
+  
+  // Calculate dynamic success rate based on the visible list
+  successRate: transactions.length > 0 
+    ? Math.round((transactions.filter(t => t.status === 'success').length / transactions.length) * 100) 
+    : 0
+} : {
+  totalRevenue: 0, 
+  totalTransactions: 0, 
+  successfulPayments: 0, 
+  pendingPayments: 0, 
+  failedPayments: 0, 
+  successRate: 0
+};
 
 return (
+/**
+ * Logs the user out of Firebase and clears the demo clock so it restarts
+ * if they manually log in again. Also navigates with a "manual" flag.
+ * 
+ * @returns {Promise<void>} Resolves when the logout process is complete.
+ * @throws {Error} If the user cancels the logout confirmation dialog.
+ */
     <div className="min-h-screen bg-brand-light dark:bg-brand-black text-content-main dark:text-content-mainDark transition-colors duration-300">
 
       {/* --- BANNER STATE 1: DEMO ACTIVE --- */}

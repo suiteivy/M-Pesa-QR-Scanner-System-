@@ -32,7 +32,7 @@ const BookConsultation = () => {
       );
 
       // 3. Fire the Mailto link
-      const mailtoLink = `mailto:mpesaqr@cloudora.live?subject=${subject}&body=${body}`;
+      const mailtoLink = `mailto:cloudoraltd@gmail.com?subject=${subject}&body=${body}`;
       
       // This tells the browser to open the default email app (Gmail, Apple Mail, etc.)
       window.location.href = mailtoLink;
@@ -43,7 +43,7 @@ const BookConsultation = () => {
     } catch (err) {
       setStatus({ 
         type: 'error', 
-        msg: 'Failed to open email client. Please email us directly at mpesaqr@cloudora.live' 
+        msg: 'Failed to open email client. Please email us directly at cloudoraltd@gmail.com' 
       });
     } finally {
       setLoading(false);
@@ -148,15 +148,6 @@ const BookConsultation = () => {
 
 {/* Contact Information (Must be relative z-10 to sit above the glow) */}
 <div className="relative z-10 mt-6 text-center space-y-2">
-  <p className="text-xs font-medium text-content-muted dark:text-content-mutedDark">
-    For assistance, email us at{' '}
-    <a 
-      href="mailto:support@cloudora.live" 
-      className="text-brand-orange font-bold hover:text-brand-orangeHover hover:underline transition-colors"
-    >
-      support@cloudora.live
-    </a>
-  </p>
   
   <p className="text-[10px] font-bold uppercase tracking-widest text-content-muted dark:text-content-mutedDark">
     or call us at{' '}
