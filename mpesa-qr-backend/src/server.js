@@ -13,8 +13,10 @@ import authRoutes from './routes/auth.js';
 import darajaRoutes from './routes/daraja.js';
 import transactionRoutes from './routes/transactions.js';
 import qrPayRouter from './routes/qrPay.js';
-import menuRoutes from './routes/menu.js'; 
+import menuRoutes from './routes/menu.js';
+import bookingRoutes from './routes/book.js';
 
+import { startDemoSimulator } from './config/demo-simulator.js'; // Start the demo simulator
 app.use(qrPayRouter);
 
 // Enhanced CORS configuration
@@ -49,7 +51,7 @@ app.use('/api/auth', authRoutes);          // Authentication routes
 app.use('/api/daraja', darajaRoutes);      // M-Pesa routes  
 app.use('/api/transactions', transactionRoutes); // Transaction routes
 app.use('/api/menu', menuRoutes);         // Menu management routes
-
+app.use('/api/booking', bookingRoutes);   // Booking routes
 
 
 app.get('/', (req, res) => {
@@ -72,7 +74,8 @@ app.get('/', (req, res) => {
     routes: {
       auth: '/api/auth',
       daraja: '/api/daraja',
-      transactions: '/api/transactions'
+      transactions: '/api/transactions',
+      bookingRoutes: '/api/booking'
     }
   });
 });
@@ -152,13 +155,19 @@ app.use((req, res) => {
   });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📍 Health check: http://localhost:${PORT}/health`);
   console.log(`🔐 Auth routes: http://localhost:${PORT}/api/auth`);
   console.log(`💰 M-Pesa routes: http://localhost:${PORT}/api/daraja`);
   console.log(`📊 Transaction routes: http://localhost:${PORT}/api/transactions`);
+  if (process.env.RUN_DEMO_SIMULATOR === 'true') {
+    startDemoSimulator();
+  } else {
+    console.log('⏸️ Demo Simulator is disabled in .env');
+  }
 });
+
 
 export default app;

@@ -20,7 +20,7 @@ import Button from './ui/Button';
 import Badge from './ui/Badge';
 import { useAuth } from '../hooks/useAuth';
 import SubscriptionShield from '../hooks/SubscriptionShield';
-import { API_BASE_URL } from '../utility/constants';
+import { API_BASE_URL,FRONTEND_BASE_URL} from '../utility/constants';
 
 const MerchantQRGenerator = () => {
   const [qrCodeUrl, setQrCodeUrl] = useState('');
@@ -60,8 +60,8 @@ const MerchantQRGenerator = () => {
       if (response.data.success) {
         // --- TEST ENVIRONMENT LOGIC (OPTION A: Terminal URL) ---
         // This links to your hosted PayPrompt page which handles the STK trigger.
-        // We use window.location.origin to adapt to localhost or production URLs.
-        const terminalUrl = `${window.location.origin}/pay?uid=${merchantData.uid}&name=${encodeURIComponent(merchantData.name)}&shortcode=${merchantData.shortcode}`;
+        // We use FRONTEND_BASE_URL to adapt to localhost or production URLs.
+        const terminalUrl = `${FRONTEND_BASE_URL}/pay?uid=${merchantData.uid}&name=${encodeURIComponent(merchantData.name)}&shortcode=${merchantData.shortcode}`;
 
         /* // --- PRODUCTION LOGIC (OPTION B: Direct M-Pesa Data) ---
         // Use this only if you want to bypass your web UI and open M-Pesa directly.

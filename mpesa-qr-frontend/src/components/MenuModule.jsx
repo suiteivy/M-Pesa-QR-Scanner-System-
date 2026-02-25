@@ -12,7 +12,8 @@ import {
   Share2
 } from 'lucide-react';
 import SubscriptionShield from '../hooks/SubscriptionShield';
-import { API_BASE_URL } from '../utility/constants';
+
+import { API_BASE_URL,FRONTEND_BASE_URL } from '../utility/constants';
 const MenuModule = () => {
   const { user } = useAuth();
   const [items, setItems] = useState([]);
@@ -67,7 +68,7 @@ const handleSaveAndPublish = async () => {
       // 2. Check for backend success flag
       if (response.data.success) {
         // Generate Menu Deep Link QR
-        const deepLink = `${window.location.origin}/public/menu/${user.uid}`;
+        const deepLink = `${FRONTEND_BASE_URL}/public/menu/${user.uid}`;
         
         // Brand the QR code to match your high-end Orange UI
         const qrUrl = await QRCode.toDataURL(deepLink, { 
