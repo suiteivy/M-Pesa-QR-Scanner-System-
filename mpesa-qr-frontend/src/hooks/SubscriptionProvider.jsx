@@ -45,7 +45,7 @@ export const SubscriptionProvider = ({ children }) => {
 
         // --- ⚡️ THE 1-HOUR LOCAL DEMO GUARD ---
         // If they are using the demo account, override the database expiry with a local 1-hour session
-        if (user.email === 'demo@merchantpro.com') { // Use your exact demo email here
+        if (user.email === 'admin@cloudora.com') { // Use your exact demo email here
           let demoStart = localStorage.getItem('demo_start_time');
           
           // If this is their first time logging in, start the 1-hour timer
@@ -85,7 +85,7 @@ export const SubscriptionProvider = ({ children }) => {
   // This interval runs every 10 seconds to ensure they are booted out instantly when the hour is up,
   // without needing to refresh the page.
   useEffect(() => {
-    if (subState.isValid && user?.email === 'demo@merchantpro.com') {
+    if (subState.isValid && user?.email === 'admin@cloudora.com') {
       const interval = setInterval(() => {
         const demoStart = localStorage.getItem('demo_start_time');
         if (demoStart) {
