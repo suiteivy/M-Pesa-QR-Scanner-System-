@@ -230,7 +230,7 @@ return (
                 ))}
               </div>
               
-              <button onClick={() => navigate('/register')} className="w-full h-16 bg-white text-brand-orange rounded-2xl font-black uppercase tracking-widest text-sm hover:scale-[1.02] active:scale-95 transition-transform shadow-xl">
+              <button onClick={() => navigate('/login')} className="w-full h-16 bg-white text-brand-orange rounded-2xl font-black uppercase tracking-widest text-sm hover:scale-[1.02] active:scale-95 transition-transform shadow-xl">
                 Claim Free Trial
               </button>
             </div>
