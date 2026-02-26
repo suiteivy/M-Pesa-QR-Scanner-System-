@@ -293,10 +293,26 @@ const LandingPage = () => {
               Support
             </p>
             <a
-              href="mailto:cloudoraltd@gmail.com"
+              href="mailto:mpesaqr@cloudora.live"
               className="text-sm md:text-base font-black uppercase tracking-wider text-zinc-950 dark:text-white hover:text-brand-orange dark:hover:text-brand-orange transition-colors"
             >
-              cloudoraltd@gmail.com
+              mpesaqr@cloudora.live
+
+            </a>
+              <a
+              href="mailto:contact@cloudora.live"
+              className="text-sm md:text-base font-black uppercase tracking-wider text-zinc-950 dark:text-white hover:text-brand-orange dark:hover:text-brand-orange transition-colors"
+            >
+        contact@cloudora.live
+              
+            </a>
+            
+              <a
+              href="mailto:support@cloudora.live"
+              className="text-sm md:text-base font-black uppercase tracking-wider text-zinc-950 dark:text-white hover:text-brand-orange dark:hover:text-brand-orange transition-colors"
+            >
+        support@cloudora.live
+              
             </a>
           </div>
 

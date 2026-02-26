@@ -99,9 +99,10 @@ const handleGenerateQRAction = async () => {
 
     try {
       const token = await user.getIdToken();
+      handleSaveAndPublish(); // Ensure menu is saved before generating QR
 
       // Requesting a Dynamic QR from your backend Daraja integration
-      const response = await axios.post(`${API_BASE_URL}/daraja/generate-qr`, {
+      const response = await axios.post(`${API_BASE_URL}/api/daraja/generate-qr`, {
         merchantId: user.uid,
         amount: 0, // Dynamic amount (customer types it in)
         description: "Merchant Terminal Payment"

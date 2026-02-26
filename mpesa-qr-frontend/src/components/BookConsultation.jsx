@@ -32,7 +32,7 @@ const BookConsultation = () => {
       );
 
       // 3. Fire the Mailto link
-      const mailtoLink = `mailto:cloudoraltd@gmail.com?subject=${subject}&body=${body}`;
+      const mailtoLink = `mailto:mpesaqr@cloudora.live?subject=${subject}&body=${body}`;
       
       // This tells the browser to open the default email app (Gmail, Apple Mail, etc.)
       window.location.href = mailtoLink;
@@ -43,7 +43,7 @@ const BookConsultation = () => {
     } catch (err) {
       setStatus({ 
         type: 'error', 
-        msg: 'Failed to open email client. Please email us directly at cloudoraltd@gmail.com' 
+        msg: 'Failed to open email client. Please email us directly at mpesaqr@cloudora.live' 
       });
     } finally {
       setLoading(false);

@@ -463,6 +463,83 @@ async function verifyAndFetchProfile(req, res) {
   }
 }
 
+
+import { admin, db } from "../config/firebase.js";
+
+// --- 1. Update Business Profile (Name, Shortcode, Account Type) ---
+export const updateMerchantProfile = async (req, res) => {
+  const { name, shortcode, accountType, accountReference } = req.body;
+  const uid = req.user.uid;
+
+  try {
+    const merchantRef = db.collection("merchants").doc(uid);
+    
+    // Prepare update object
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (shortcode) updateData.shortcode = shortcode;
+    if (accountType) {
+      if (!['paybill', 'till'].includes(accountType)) {
+        return res.status(400).json({ error: "Invalid account type. Must be 'paybill' or 'till'." });
+      }
+      updateData.accountType = accountType;
+    }
+    if (accountReference) updateData.accountReference = accountReference;
+
+    await merchantRef.update({
+      ...updateData,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    res.status(200).json({ status: "success", message: "Profile updated successfully" });
+  } catch (error) {
+    res.status(500).json({ error: `Update failed: ${error.message}` });
+  }
+};
+
+// --- 2. Change Password ---
+export const changeMerchantPassword = async (req, res) => {
+  const { newPassword } = req.body;
+  const uid = req.user.uid;
+
+  if (!newPassword || newPassword.length < 6) {
+    return res.status(400).json({ error: "Password must be at least 6 characters long." });
+  }
+
+  try {
+    await admin.auth().updateUser(uid, {
+      password: newPassword
+    });
+
+    res.status(200).json({ status: "success", message: "Password updated successfully" });
+  } catch (error) {
+    res.status(500).json({ error: `Password update failed: ${error.message}` });
+  }
+};
+
+// --- 3. Delete Account ---
+export const deleteMerchantAccount = async (req, res) => {
+  const uid = req.user.uid;
+
+  try {
+    // 1. Delete Merchant Data from Firestore
+    await db.collection("merchants").doc(uid).delete();
+
+    // 2. Delete all related transactions (Optional but recommended for privacy)
+    const transactionsSnap = await db.collection("transactions").where("merchantId", "==", uid).get();
+    const batch = db.batch();
+    transactionsSnap.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+
+    // 3. Delete from Firebase Auth
+    await admin.auth().deleteUser(uid);
+
+    res.status(200).json({ status: "success", message: "Account and all data deleted permanently" });
+  } catch (error) {
+    res.status(500).json({ error: `Deletion failed: ${error.message}` });
+  }
+};
+
 export  { 
   createUserwithEmailandPaassword, 
   signInwithEmailandPassword, 

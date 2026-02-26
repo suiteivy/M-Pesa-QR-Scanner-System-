@@ -74,6 +74,7 @@ async function verifyToken(req, res, next) {
     next();
   } catch (error) {
     console.error("❌ Firebase Verification Error:", error.code, error.message);
+    
 
     // FIX: Removed the extra backticks and cleaned up the response logic
     let message = 'Unauthorized: Invalid token';
@@ -84,7 +85,12 @@ async function verifyToken(req, res, next) {
       message = 'Malformed token.';
     }
 
-    res.status(401).json({ error: message });
+    console.error("Detailed Error:", error); 
+  res.status(401).json({ 
+    error: 'Invalid Token', 
+    firebaseCode: error.code,
+    reason: error.message
+  });
   }
 }
 

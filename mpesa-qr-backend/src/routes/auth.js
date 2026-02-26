@@ -6,7 +6,10 @@ import {
   cleanupIncompleteUser, 
   checkUserStatus,
   diagnoseProblem,
-  fixAllIncompleteUsers
+  fixAllIncompleteUsers,
+  updateMerchantProfile, 
+  changeMerchantPassword, 
+  deleteMerchantAccount
 } from "../controllers/auth.js";
 import { verifyToken } from "../middlewares/auth.js";
 import { db } from '../config/firebase.js';
@@ -49,5 +52,9 @@ router.get('/profile', verifyToken, async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
+
+router.patch("/update-profile", verifyToken, updateMerchantProfile);
+router.patch("/security/password", verifyToken, changeMerchantPassword);
+router.delete("/account", verifyToken, deleteMerchantAccount);
 
 export default router;
