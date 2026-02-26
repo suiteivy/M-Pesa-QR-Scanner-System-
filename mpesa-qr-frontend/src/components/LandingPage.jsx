@@ -293,10 +293,10 @@ const LandingPage = () => {
               Support
             </p>
             <a
-              href="mailto:Mpesaqr@cloudora.live"
+              href="mailto:cloudoraltd@gmail.com"
               className="text-sm md:text-base font-black uppercase tracking-wider text-zinc-950 dark:text-white hover:text-brand-orange dark:hover:text-brand-orange transition-colors"
             >
-              Mpesaqr@cloudora.live
+              cloudoraltd@gmail.com
             </a>
           </div>
 
