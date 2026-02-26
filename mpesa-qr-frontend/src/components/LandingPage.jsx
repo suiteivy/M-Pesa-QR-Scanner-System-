@@ -15,7 +15,9 @@ import {
   Check,       // <--- NEW IMPORT
   Utensils,    // <--- NEW IMPORT
   Plus ,        // <--- NEW IMPORT
-  Gift         // <--- NEW IMPORT
+  Gift,
+  X
+ 
 
 } from 'lucide-react';
 
@@ -203,72 +205,95 @@ return (
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-stretch">
-            
-            {/* 1. THE STAR OF THE SHOW: PRO TRIAL CARD */}
-            <div className="bg-brand-orange text-white rounded-[2rem] p-8 md:p-10 relative transform md:-translate-y-4 shadow-2xl shadow-brand-orange/20 border-2 border-brand-orange">
-              <div className="absolute top-0 right-0 bg-white text-brand-orange px-4 py-1 rounded-bl-xl rounded-tr-[1.8rem] text-[10px] font-black uppercase tracking-widest shadow-sm">
-                Start Here
-              </div>
-              <h3 className="text-4xl font-black uppercase italic tracking-tighter mb-2">10-Day Pro Trial</h3>
-              <p className="text-white/80 font-bold text-xs uppercase tracking-wide mb-8">
-                Unrestricted access to the entire platform.
-              </p>
+ <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+  
+  {/* TIER 1: THE ENTRY (SOLOPRENEUR) */}
+  <div className="bg-brand-surface dark:bg-brand-gray border border-brand-borderLight dark:border-brand-borderDark rounded-[2rem] p-8 flex flex-col justify-between transition-all hover:border-brand-orange/30">
+    <div>
+      <h3 className="text-2xl font-black uppercase italic tracking-tighter text-content-main dark:text-content-mainDark mb-1">Starter Core</h3>
+      <p className="text-[10px] font-black text-brand-orange uppercase tracking-widest mb-6">For Micro-Entrepreneurs</p>
+      
+      <div className="flex items-end gap-1 mb-8">
+        <span className="text-4xl font-black italic tracking-tighter text-content-main dark:text-content-mainDark">$10</span>
+        <span className="text-[10px] font-bold text-content-muted uppercase tracking-widest mb-1.5">/ month</span>
+      </div>
 
-              <div className="space-y-5 mb-10">
-                {[
-                  'Full Pro Plan Access', 
-                  'Unlimited QR Generation', 
-                  'Live Revenue Analytics', 
-                  'Priority Support', 
-                  'Zero Commitment'
-                ].map((feat, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <div className="bg-white/20 p-1 rounded-full shrink-0">
-                      <Check className="w-3 h-3 text-white" />
-                    </div>
-                    <span className="text-sm font-bold">{feat}</span>
-                  </div>
-                ))}
-              </div>
-              
-              <button onClick={() => setShowBookConsultation(true)} className="w-full h-16 bg-white text-brand-orange rounded-2xl font-black uppercase tracking-widest text-sm hover:scale-[1.02] active:scale-95 transition-transform shadow-xl">
-                Claim Free Trial
-              </button>
+      <div className="space-y-4 mb-10">
+        {['Daily Transaction Log', 'Standard QR Support', 'Mobile Terminal Access', 'Basic Audit Reports'].map((feat, i) => (
+          <div key={i} className="flex items-center gap-3">
+            <div className="bg-brand-orange/10 p-1 rounded-full shrink-0">
+              <Check className="w-3 h-3 text-brand-orange" />
             </div>
-
-            {/* 2. THE PAID TIER (What happens after) */}
-            <div className="bg-brand-light dark:bg-brand-black border-2 border-brand-borderLight dark:border-brand-borderDark rounded-[2rem] p-8 md:p-10 relative flex flex-col justify-between">
-              <div>
-                <h3 className="text-3xl font-black uppercase italic tracking-tighter text-content-main dark:text-content-mainDark mb-2">Pro Plan</h3>
-                <p className="text-content-muted dark:text-content-mutedDark font-bold text-xs uppercase tracking-wide mb-8">
-                  After your 10-day trial ends.
-                </p>
-
-                <div className="flex items-end gap-2 mb-8">
-                  <span className="text-4xl font-black italic tracking-tighter text-content-main dark:text-content-mainDark">KES 1,500</span>
-                  <span className="text-xs font-bold text-content-muted uppercase tracking-widest mb-1.5">/ month</span>
-                </div>
-
-                <div className="space-y-4 mb-10">
-                  {[
-                    'Keep all Pro Features', 
-                    'AI Revenue Predictions', 
-                    'CSV Transaction Exports', 
-                    'Optional Menu Add-on (+500/mo)'
-                  ].map((feat, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <div className="bg-brand-orange/10 dark:bg-brand-orange/20 p-1 rounded-full shrink-0">
-                        <Check className="w-3 h-3 text-brand-orange" />
-                      </div>
-                      <span className="text-sm font-medium text-content-main dark:text-content-mainDark">{feat}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
+            <span className="text-xs font-bold text-content-main dark:text-content-mainDark uppercase tracking-tight">{feat}</span>
           </div>
+        ))}
+      </div>
+    </div>
+    <button  onClick={() => setShowBookConsultation(true)}   variant="outline" className="w-full h-12 rounded-xl text-[10px] font-black uppercase tracking-widest border-brand-borderLight dark:border-brand-borderDark">Select Starter</button>
+  </div>
+
+  {/* TIER 2: THE MID (PROFESSIONAL) - THE STAR OF THE SHOW */}
+  <div className="bg-brand-orange text-white rounded-[2rem] p-8 relative transform lg:-translate-y-4 shadow-2xl shadow-brand-orange/30 border-2 border-brand-orange flex flex-col justify-between">
+    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-brand-buttonBase text-white px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.2em] shadow-xl">
+      Most Popular
+    </div>
+    <div>
+      <h3 className="text-3xl font-black uppercase italic tracking-tighter mb-1">Business Pro</h3>
+      <p className="text-white/80 font-black text-[10px] uppercase tracking-widest mb-6">For Growing SMEs & Retailers</p>
+
+      <div className="flex items-end gap-1 mb-8">
+        <span className="text-5xl font-black italic tracking-tighter text-white">$20</span>
+        <span className="text-[10px] font-bold text-white/70 uppercase tracking-widest mb-2">/ month</span>
+      </div>
+
+      <div className="space-y-4 mb-10">
+        {['Advanced Revenue Analytics', 'Dynamic Multi-QR Sync', 'CSV & PDF Data Exports', 'Priority Network Routing', '5 Employee Seats'].map((feat, i) => (
+          <div key={i} className="flex items-center gap-3">
+            <div className="bg-white/20 p-1 rounded-full shrink-0">
+              <Check className="w-3 h-3 text-white" />
+            </div>
+            <span className="text-xs font-black uppercase tracking-tight">{feat}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+    <button onClick={() => setShowBookConsultation(true)} className="w-full h-14 bg-white text-brand-orange rounded-xl font-black uppercase tracking-widest text-xs hover:scale-[1.02] active:scale-95 transition-transform shadow-xl">
+      Go Professional
+    </button>
+  </div>
+
+  {/* TIER 3: THE HIGH (ENTERPRISE) */}
+  <div className="bg-brand-buttonBase text-white rounded-[2rem] p-8 flex flex-col justify-between">
+    <div>
+      <h3 className="text-2xl font-black uppercase italic tracking-tighter mb-1">Elite Merchant</h3>
+      <p className="text-zinc-500 font-black text-[10px] uppercase tracking-widest mb-6">For Full-Scale Restaurants</p>
+
+      <div className="flex items-end gap-1 mb-8">
+        <span className="text-4xl font-black italic tracking-tighter text-white">$50</span>
+        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">/ month</span>
+      </div>
+
+      <div className="space-y-4 mb-10">
+        {[
+          'Interactive QR Menu Assets', 
+          'AI-Powered Sales Forecasts', 
+          'Full API Integration Access', 
+          'Dedicated Success Manager', 
+          'Unlimited Employee Seats'
+        ].map((feat, i) => (
+          <div key={i} className="flex items-center gap-3">
+            <div className="bg-zinc-800 p-1 rounded-full shrink-0">
+              <Check className="w-3 h-3 text-brand-orange" />
+            </div>
+            <span className="text-xs font-bold text-zinc-300 uppercase tracking-tight">{feat}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+    <button  onClick={() => setShowBookConsultation(true)}  className="w-full h-12 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest border-none">Contact Sales</button>
+  </div>
+
+</div>
         </div>
       </section>
             {showBookConsultation && (
