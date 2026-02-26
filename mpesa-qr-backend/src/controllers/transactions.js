@@ -17,9 +17,9 @@ const getLocalDateString = (date) => {
 const getEATDateString = (date) => {
   // Shift by 3 hours before converting to string
   const eatDate = new Date(date.getTime() + (3 * 60 * 60 * 1000));
-  return eatDate.getUTCFullYear() + '-' + 
-         String(eatDate.getUTCMonth() + 1).padStart(2, '0') + '-' + 
-         String(eatDate.getUTCDate()).padStart(2, '0');
+  return eatDate.getUTCFullYear() + '-' +
+    String(eatDate.getUTCMonth() + 1).padStart(2, '0') + '-' +
+    String(eatDate.getUTCDate()).padStart(2, '0');
 };
 
 function convertFirestoreTimestamp(timestamp) {
@@ -55,17 +55,17 @@ function serializeTransaction(transaction) {
 const getNormalizedTodayRevenue = (currentRevenue) => {
   const now = new Date();
   const hoursPassed = now.getHours() + (now.getMinutes() / 60);
-  
+
   // Prevent division by zero and provide a minimum floor (e.g., start scaling after 1 AM)
-  if (hoursPassed < 1) return currentRevenue; 
+  if (hoursPassed < 1) return currentRevenue;
 
   // Simple Linear Scaling: (Current / Hours Passed) * 24 
   // This estimates the 24-hour total based on the current hourly run-rate.
   const estimatedTotal = (currentRevenue / hoursPassed) * 24;
-  
+
   // We apply a 20% "conservative buffer" so we don't over-predict 
   // early in the morning when data is volatile.
-  return estimatedTotal * 0.8; 
+  return estimatedTotal * 0.8;
 };
 
 // Inside your main processing logic:
@@ -105,14 +105,14 @@ function calculateTrend(dataPoints) {
 
   const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
   const intercept = (sumY - slope * sumX) / n;
-  
+
   const currentVal = (slope * n) + intercept;
   const nextVal = (slope * (n + 1)) + intercept;
-  
-  return { 
-    slope, 
+
+  return {
+    slope,
     nextPeriodPrediction: Math.max(0, nextVal),
-    currentPeriodPrediction: Math.max(0, currentVal), 
+    currentPeriodPrediction: Math.max(0, currentVal),
     trend: slope > 0.5 ? 'growth' : slope < -0.5 ? 'decline' : 'stable'
   };
 }
@@ -208,7 +208,7 @@ export async function getTransactions(req, res) {
 
     const [dSnap, gSnap] = await executeQueriesWithFallback(directQuery.limit(Number(limit)), guestQuery.limit(Number(limit)), merchantId, period, filterDate, endFilterDate);
     const allDocs = [...dSnap.docs, ...gSnap.docs.filter(g => !dSnap.docs.some(d => d.id === g.id))];
-    
+
     let transactions = allDocs.map(doc => serializeTransaction({ id: doc.id, ...doc.data() }));
     if (status && status !== 'all') transactions = transactions.filter(t => t.status === status);
     transactions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -259,96 +259,99 @@ async function fetchRawMerchantTransactions(merchantId, period, limit = null) {
 export async function getTransactionAnalytics(req, res) {
   try {
     const merchantId = req.user.uid;
-    const { period = 'week', status, limit = 100 } = req.query;
-
-    // 1. ISOLATED FETCH: Get the base data
-    const rawTransactions = await fetchRawMerchantTransactions(merchantId, period);
-
-    // 2. FILTERING (Status)
-    let filteredTransactions = rawTransactions;
-    if (status && status !== 'all') {
-      filteredTransactions = rawTransactions.filter(t => t.status === status);
-    }
-
-    // 3. PREPARE ANALYTICS
+    const { period = 'week', status = 'all', limit = 50 } = req.query;
     const now = new Date();
-    let queryStartDate = new Date();
-    // Re-align start date for bucket initialization to match the fetcher logic
-    switch (period) {
-      case 'today': queryStartDate.setHours(0, 0, 0, 0); break;
-      case 'week': queryStartDate.setDate(now.getDate() - 7); break;
-      case 'month': queryStartDate.setMonth(now.getMonth() - 1); break;
-      case 'year': queryStartDate.setFullYear(now.getFullYear() - 1); break;
-    }
-    queryStartDate.setHours(0, 0, 0, 0);
+    let filterDate = new Date();
+    filterDate.setHours(0, 0, 0, 0);
 
+    switch (period) {
+      case 'today': break;
+      case 'week': filterDate.setDate(now.getDate() - 7); break;
+      case 'month': filterDate.setDate(now.getDate() - 30); break;
+      case 'year': filterDate.setFullYear(now.getFullYear() - 1); break;
+    }
+
+    const ts = admin.firestore.Timestamp.fromDate(new Date(filterDate.getTime() - (3 * 60 * 60 * 1000)));
+
+    // 1. CHEAP AGGREGATION: Get Total Revenue and Count (Cost: 1 READ)
+    const baseQuery = db.collection('transactions')
+      .where('merchantId', '==', merchantId)
+      .where('createdAt', '>=', ts);
+
+    const aggSnapshot = await baseQuery.where('status', '==', 'success').aggregate({
+      totalRevenue: admin.firestore.AggregateField.sum('amount'),
+      count: admin.firestore.AggregateField.count()
+    }).get();
+
+    const { totalRevenue, count } = aggSnapshot.data();
+
+    // 2. DATA BUCKETING: We still need docs for the chart, but we limit fields if possible
+    // (Firestore currently requires doc reads for daily grouping)
+    const docsSnapshot = await baseQuery.get();
     const dailyMap = {};
-    for (let d = new Date(queryStartDate); d <= now; d.setDate(d.getDate() + 1)) {
-      const dateKey = getEATDateString(d);
-      dailyMap[dateKey] = { date: dateKey, totalRevenue: 0, count: 0 };
+    for (let d = new Date(filterDate); d <= now; d.setDate(d.getDate() + 1)) {
+      const key = getEATDateString(d);
+      dailyMap[key] = { date: key, totalRevenue: 0, count: 0 };
     }
 
     const hoursMap = new Array(24).fill(0);
-    let totalRevenue = 0;
     let qrRevenue = 0;
     let qrCount = 0;
 
-    filteredTransactions.forEach(t => {
+// Inside getTransactionAnalytics loop:
+docsSnapshot.forEach(doc => {
+  const t = doc.data();
+  const dateObj = convertFirestoreTimestamp(t.createdAt);
+  if (dateObj) {
+    const dateKey = getEATDateString(dateObj);
+    if (dailyMap[dateKey]) {
+      // 1. Revenue & Success Count
       if (t.status === 'success') {
-        const amount = Number(t.amount) || 0;
-        const dateObj = convertFirestoreTimestamp(t.createdAt);
-        
-        if (dateObj) {
-          const dateKey = getEATDateString(dateObj);
-          if (dailyMap[dateKey]) {
-            dailyMap[dateKey].totalRevenue += amount;
-            dailyMap[dateKey].count++;
-            totalRevenue += amount;
-          }
-          
-          const eatHour = (dateObj.getUTCHours() + 3) % 24;
-          hoursMap[eatHour]++;
-
-          const isQR = t.source?.includes('qr') || !!t.qrData;
-          if (isQR) {
-            qrRevenue += amount;
-            qrCount++;
-          }
-        }
+        dailyMap[dateKey].totalRevenue += Number(t.amount);
+        dailyMap[dateKey].count++;
       }
-    });
+      // 2. Pending Count (Always tracked)
+      if (t.status === 'pending') {
+        dailyMap[dateKey].pendingCount = (dailyMap[dateKey].pendingCount || 0) + 1;
+      }
+      // 3. Failed Count (Always tracked)
+      if (['failed', 'error'].includes(t.status)) {
+        dailyMap[dateKey].failedCount = (dailyMap[dateKey].failedCount || 0) + 1;
+      }
+    }
+  }
+});
 
     const sortedSummaries = Object.values(dailyMap).sort((a, b) => a.date.localeCompare(b.date));
-    const predictionModel = calculateTrend(prepareTrendData(sortedSummaries));
+    const trendData = sortedSummaries.map((day, i) => ({
+      x: i + 1,
+      y: i === sortedSummaries.length - 1 ? getNormalizedTodayRevenue(day.totalRevenue) : day.totalRevenue
+    }));
+    const prediction = calculateTrend(trendData);
 
-    // 4. PREPARE SERIALIZED TRANSACTION LIST (Isolated from Analytics Logic)
-    const transactionsList = filteredTransactions
-      .map(t => serializeTransaction(t))
+    // 3. PAGINATED RECENT LIST: Only fetch the first few (Cost: 'limit' READS)
+    const recentDocs = docsSnapshot.docs
+      .map(d => serializeTransaction({ id: d.id, ...d.data() }))
+      .filter(t => status === 'all' || t.status === status)
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       .slice(0, Number(limit));
 
-    // 5. COMBINED RESPONSE
     res.status(200).json({
       status: 'success',
       analytics: {
         period,
-        summary: { 
-            totalTransactions: filteredTransactions.length, 
-            totalRevenue,
-            qrRevenue,
-            qrCount
-        },
+        summary: { totalTransactions: count, totalRevenue, qrRevenue, qrCount },
         insights: {
           peakTradingHour: `${hoursMap.indexOf(Math.max(...hoursMap)).toString().padStart(2, '0')}:00`,
           prediction: {
-            trendDirection: predictionModel.trend,
-            todayRevenueForecast: Math.round(predictionModel.currentPeriodPrediction),
-            nextDayRevenue: Math.round(predictionModel.nextPeriodPrediction)
+            trendDirection: prediction.trend,
+            todayRevenueForecast: Math.round(prediction.currentPeriodPrediction),
+            nextDayRevenue: Math.round(prediction.nextPeriodPrediction)
           }
         },
         dailySummaries: sortedSummaries
       },
-      transactions: transactionsList // Sent to frontend setTransactions
+      transactions: recentDocs
     });
   } catch (error) {
     res.status(500).json({ status: 'error', message: error.message });
@@ -368,8 +371,8 @@ export async function getMerchantAllTransactions(req, res) {
     transactions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     res.status(200).json({ status: 'success', transactions, count: transactions.length });
-  } catch (error) { 
-    res.status(500).json({ error: error.message }); 
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 }
 

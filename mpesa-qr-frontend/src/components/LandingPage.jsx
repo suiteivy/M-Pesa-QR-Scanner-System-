@@ -23,9 +23,11 @@ import {
 
 import ThemeToggle from './ui/Toggle';
 import Badge from './ui/Badge';
+import BookConsultation from './BookConsultation';
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const [showBookConsultation, setShowBookConsultation] = React.useState(false);
 
   const scrollToSection = (id) => {
     const element = document.getElementById(id);
@@ -230,7 +232,7 @@ return (
                 ))}
               </div>
               
-              <button onClick={() => navigate('/login')} className="w-full h-16 bg-white text-brand-orange rounded-2xl font-black uppercase tracking-widest text-sm hover:scale-[1.02] active:scale-95 transition-transform shadow-xl">
+              <button onClick={() => setShowBookConsultation(true)} className="w-full h-16 bg-white text-brand-orange rounded-2xl font-black uppercase tracking-widest text-sm hover:scale-[1.02] active:scale-95 transition-transform shadow-xl">
                 Claim Free Trial
               </button>
             </div>
@@ -269,6 +271,19 @@ return (
           </div>
         </div>
       </section>
+            {showBookConsultation && (
+              <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in zoom-in-95 duration-300">
+                <div className="relative w-full max-w-md">
+                  <button 
+                    onClick={() => setShowBookConsultation(false)}
+                    className="absolute top-4 right-4 z-50 p-2 bg-brand-light/50 dark:bg-brand-black/50 hover:bg-brand-light dark:hover:bg-brand-black rounded-full transition-colors"
+                  >
+                    <X className="w-5 h-5 text-content-main dark:text-content-mainDark" />
+                  </button>
+                  <BookConsultation />
+                </div>
+              </div>
+            )}
 
       {/* --- FOOTER --- */}
       <footer className="max-w-7xl mx-auto px-6 py-12 md:py-16">
@@ -300,10 +315,22 @@ return (
   {/* Secondary Actions: Emails Stacked */}
   <div className="flex flex-col gap-1.5 items-center md:items-end mt-1">
     <a
-      href="mailto:cloudoraltd@gmail.com"
+      href="mailto:mpesaqr@cloudora.live"
       className="text-xs font-bold tracking-wider text-content-main dark:text-content-mainDark hover:text-brand-orange transition-colors"
     >
-      cloudoraltd@gmail.com
+      mpesaqr@cloudora.live
+    </a>
+        <a
+      href="mailto:support@cloudora.live"
+      className="text-xs font-bold tracking-wider text-content-main dark:text-content-mainDark hover:text-brand-orange transition-colors"
+    >
+      support@cloudora.live
+    </a>
+        <a
+      href="mailto:contact@cloudora.live"
+      className="text-xs font-bold tracking-wider text-content-main dark:text-content-mainDark hover:text-brand-orange transition-colors"
+    >
+      contact@cloudora.live
     </a>
   </div>
 </div>

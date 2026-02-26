@@ -39,7 +39,7 @@ router.post('/book-consultation', async (req, res) => {
         timeZone: 'Africa/Nairobi',
       },
       attendees: [
-        { email: 'cloudoraltd@gmail.com' }, // The Host
+        { email: 'mpesaqr@cloudora.live' }, // The Host
         { email: email },                   // The Client
       ],
       // This tells Google to actually send the email invites!
