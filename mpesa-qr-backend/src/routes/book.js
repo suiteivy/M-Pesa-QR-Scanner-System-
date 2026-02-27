@@ -50,7 +50,7 @@ router.post('/book-consultation', async (req, res) => {
 
     // 4. Inject the event into the specific calendar
     const response = await calendar.events.insert({
-      calendarId: 'cloudoraltd@gmail.com', // The calendar we are injecting into
+      calendarId: 'mpesaqr@cloudora.live', // The calendar we are injecting into
       resource: event,
       sendUpdates: 'all', // Sends the email invitation to the client
     });

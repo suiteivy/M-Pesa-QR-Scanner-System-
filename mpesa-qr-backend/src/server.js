@@ -15,6 +15,7 @@ import transactionRoutes from './routes/transactions.js';
 import qrPayRouter from './routes/qrPay.js';
 import menuRoutes from './routes/menu.js';
 import bookingRoutes from './routes/book.js';
+import marketingRoutes from './routes/marketing.js';
 
 import { startDemoSimulator } from './config/demo-simulator.js'; // Start the demo simulator
 app.use(qrPayRouter);
@@ -52,6 +53,7 @@ app.use('/api/daraja', darajaRoutes);      // M-Pesa routes
 app.use('/api/transactions', transactionRoutes); // Transaction routes
 app.use('/api/menu', menuRoutes);         // Menu management routes
 app.use('/api/booking', bookingRoutes);   // Booking routes
+app.use('/api/marketing', marketingRoutes); // Marketing routes
 
 
 app.get('/', (req, res) => {
