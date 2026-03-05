@@ -90,9 +90,9 @@ const LandingPage = () => {
   }, []);
 
   const getPrice = (base) => {
-    if (!saleConfig) return base;
+    if (!saleConfig) return base.toFixed(2);
     const discount = base * (saleConfig.discountPercent / 100);
-    return (base - discount).toFixed(0); // Keeping it clean without decimals
+    return (base - discount).toFixed(2);
   };
 
   return (
@@ -138,70 +138,74 @@ const LandingPage = () => {
       </nav>
 
       {/* --- 2. THE HERO: FREE TRIAL FOCUS --- */}
+
+
       <section id="top" className="relative min-h-[100svh] flex flex-col justify-center pt-20 pb-12 px-4 md:px-6 overflow-hidden">
         <div className="max-w-5xl mx-auto text-center space-y-6 relative z-10">
+
 
           {/* HCI: Badge explicitly advertises the trial to remove immediate friction */}
           <div className="relative group max-w-2xl mx-auto mb-12">
             {/* Glow Effect behind the banner */}
+
             <div className="absolute -inset-1 bg-gradient-to-r from-brand-orange to-brand-orangeHover rounded-[2rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
 
 
-              {/* Animated Shimmer Background */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-[shimmer_3s_infinite] pointer-events-none" />
+            {/* Animated Shimmer Background */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-[shimmer_3s_infinite] pointer-events-none" />
+            {saleConfig && (
+              // DYNAMIC COUNTDOWN PILL
+              <div className="relative group max-w-2xl mx-auto mb-16 animate-in fade-in zoom-in duration-1000">
+                {/* Subtle Glow Background */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-brand-orange to-brand-orangeHover rounded-[2rem] blur opacity-20 group-hover:opacity-40 transition duration-700"></div>
 
-              {/* DYNAMIC COUNTDOWN PILL */}
-              {saleConfig && (
-                <div className="relative group max-w-2xl mx-auto mb-16 animate-in fade-in zoom-in duration-1000">
-                  {/* Subtle Glow Background */}
-                  <div className="absolute -inset-1 bg-gradient-to-r from-brand-orange to-brand-orangeHover rounded-[2rem] blur opacity-20 group-hover:opacity-40 transition duration-700"></div>
+                <div className="relative flex flex-col sm:flex-row items-center justify-between gap-6 px-8 py-5 rounded-[2.2rem] bg-brand-orange text-white shadow-2xl overflow-hidden border border-white/10">
 
-                  <div className="relative flex flex-col sm:flex-row items-center justify-between gap-6 px-8 py-5 rounded-[2.2rem] bg-brand-orange text-white shadow-2xl overflow-hidden border border-white/10">
+                  {/* Animated Shimmer Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-[shimmer_4s_infinite] pointer-events-none" />
 
-                    {/* Animated Shimmer Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-[shimmer_4s_infinite] pointer-events-none" />
-
-                    <div className="flex items-center gap-4 z-10">
-                      <div className="p-2.5 bg-white/20 rounded-2xl">
-                        <Gift className="w-5 h-5 animate-bounce" />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/80 leading-none">
-                          {saleConfig.label || 'Flash Sale'}
-                        </span>
-                        <span className="text-lg font-black uppercase tracking-tighter mt-1">
-                          {saleConfig.discountPercent}% Off All Tiers
-                        </span>
-                      </div>
+                  <div className="flex items-center gap-4 z-10">
+                    <div className="p-2.5 bg-white/20 rounded-2xl">
+                      <Gift className="w-5 h-5 animate-bounce" />
                     </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/80 leading-none">
+                        {saleConfig.label || 'Flash Sale'}
+                      </span>
+                      <span className="text-lg font-black uppercase tracking-tighter mt-1">
+                        {saleConfig.discountPercent}% Off All Tiers
+                      </span>
+                    </div>
+                  </div>
 
-                    {/* THE TIMER PILL */}
-                    <div className="flex items-center gap-3 bg-brand-black/20 backdrop-blur-xl px-5 py-2.5 rounded-2xl border border-white/10 z-10">
-                      <Clock className="w-4 h-4 text-white/70" />
-                      <div className="flex gap-1.5 font-mono font-black text-sm tracking-tighter">
-                        <div className="flex flex-col items-center">
-                          <span>{timeLeft.days}D</span>
-                        </div>
-                        <span className="text-white/30">:</span>
-                        <div className="flex flex-col items-center">
-                          <span>{timeLeft.hours.toString().padStart(2, '0')}H</span>
-                        </div>
-                        <span className="text-white/30">:</span>
-                        <div className="flex flex-col items-center">
-                          <span>{timeLeft.minutes.toString().padStart(2, '0')}M</span>
-                        </div>
-                        <span className="text-white/30">:</span>
-                        <div className="flex flex-col items-center">
-                          <span className="text-brand-orangeLight animate-pulse">
-                            {timeLeft.seconds.toString().padStart(2, '0')}S
-                          </span>
-                        </div>
+                  {/* THE TIMER PILL */}
+                  <div className="flex items-center gap-3 bg-brand-black/20 backdrop-blur-xl px-5 py-2.5 rounded-2xl border border-white/10 z-10">
+                    <Clock className="w-4 h-4 text-white/70" />
+                    <div className="flex gap-1.5 font-mono font-black text-sm tracking-tighter">
+                      <div className="flex flex-col items-center">
+                        <span>{timeLeft.days}D</span>
+                      </div>
+                      <span className="text-white/30">:</span>
+                      <div className="flex flex-col items-center">
+                        <span>{timeLeft.hours.toString().padStart(2, '0')}H</span>
+                      </div>
+                      <span className="text-white/30">:</span>
+                      <div className="flex flex-col items-center">
+                        <span>{timeLeft.minutes.toString().padStart(2, '0')}M</span>
+                      </div>
+                      <span className="text-white/30">:</span>
+                      <div className="flex flex-col items-center">
+                        <span className="text-brand-orangeLight animate-pulse">
+                          {timeLeft.seconds.toString().padStart(2, '0')}S
+                        </span>
                       </div>
                     </div>
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            ) || null}
+          </div>
+
 
           <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tighter uppercase italic leading-[0.9] text-zinc-950 dark:text-white animate-in slide-in-from-bottom-12 duration-1000">
             Accept M-Pesa.<br />
@@ -232,6 +236,7 @@ const LandingPage = () => {
           </p>
         </div>
       </section>
+
 
       {/* --- 3. LEARNABILITY: HOW DOES IT WORK? (Unchanged, remains strong) --- */}
       <section id="how-it-works" className="bg-brand-surface dark:bg-brand-gray border-y border-brand-borderLight dark:border-brand-borderDark py-20 md:py-32 px-4 md:px-6">
@@ -302,38 +307,42 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* --- 5. REDEFINED PRICING: TRIAL FOCUSED --- */}
       {/* --- 5. REDEFINED PRICING: "PRO" TRIAL FOCUSED --- */}
+      {/* --- 5. REDEFINED PRICING: TRIAL FOCUSED --- */}
       <section id="pricing" className="bg-brand-surface dark:bg-brand-gray border-y border-brand-borderLight dark:border-brand-borderDark py-20 md:py-32 px-4 md:px-6">
-        <div className="max-w-5xl mx-auto">
-
-          <div className="mb-12 text-center">
-            <h2 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter text-zinc-950 dark:text-white">
-              Try <span className="text-brand-orange">Pro</span> Free.
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-16 text-center">
+            <h2 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter text-zinc-950 dark:text-white leading-[0.9]">
+              Nairobi’s Fastest <span className="text-brand-orange">M-Pesa</span> Engine.
             </h2>
             <p className="text-content-muted font-bold uppercase tracking-widest mt-4 text-xs">
-              Get full access to all premium features for 10 days. No credit card required.
+              Secure your specialized merchant setup. No automated bots—just direct expert support.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
 
-            {/* TIER 1: THE ENTRY (SOLOPRENEUR) - $9 (Was $10) */}
-            <div className="bg-brand-surface dark:bg-brand-gray border border-brand-borderLight dark:border-brand-borderDark rounded-[2rem] p-8 flex flex-col justify-between transition-all hover:border-brand-orange/30 group">
+            {/* TIER 1: STARTER CORE */}
+            <div className="bg-brand-surface dark:bg-brand-gray border border-brand-borderLight dark:border-brand-borderDark rounded-[2.5rem] p-8 flex flex-col justify-between transition-all hover:border-brand-orange/30">
               <div>
                 <h3 className="text-2xl font-black uppercase italic tracking-tighter text-content-main dark:text-content-mainDark mb-1">Starter Core</h3>
-                <p className="text-[10px] font-black text-brand-orange uppercase tracking-widest mb-6">For Micro-Entrepreneurs</p>
+                <p className="text-[10px] font-black text-brand-orange uppercase tracking-widest mb-6">Essential Transaction Tools</p>
 
                 <div className="flex flex-col mb-8">
-                  <span className="text-[10px] font-bold text-content-muted line-through tracking-widest opacity-60">$10.00</span>
+                  {saleConfig && <span className="text-[10px] font-bold text-content-muted line-through tracking-widest opacity-60">$10.00</span>}
                   <div className="flex items-end gap-1">
-                    <span className="text-4xl font-black italic tracking-tighter text-content-main dark:text-content-mainDark">$9.00</span>
+                    <span className="text-4xl font-black italic tracking-tighter text-content-main dark:text-content-mainDark">${getPrice(10)}</span>
                     <span className="text-[10px] font-bold text-content-muted uppercase tracking-widest mb-1.5">/ month</span>
                   </div>
                 </div>
 
                 <div className="space-y-4 mb-10">
-                  {['Daily Transaction Log', 'Standard QR Support', 'Mobile Terminal Access', 'Basic Audit Reports'].map((feat, i) => (
+                  {[
+                    'Unlimited Dynamic QR Generation',
+                    'High-Speed M-Pesa STK Push',
+                    'Basic Revenue Statistics',
+                    'Digital Receipting'
+                  ].map((feat, i) => (
                     <div key={i} className="flex items-center gap-3">
                       <div className="bg-brand-orange/10 p-1 rounded-full shrink-0">
                         <Check className="w-3 h-3 text-brand-orange" />
@@ -343,84 +352,107 @@ const LandingPage = () => {
                   ))}
                 </div>
               </div>
-              <button onClick={() => setShowBookConsultation(true)} className="w-full h-12 rounded-xl text-[10px] font-black uppercase tracking-widest border border-brand-borderLight dark:border-brand-borderDark text-content-main dark:text-content-mainDark hover:bg-brand-light dark:hover:bg-brand-black transition-colors">
-                Select Starter
+              <button
+                onClick={() => setShowBookConsultation(true)}
+                className="w-full h-12 rounded-xl text-[10px] font-black uppercase tracking-widest border border-brand-borderLight dark:border-brand-borderDark text-content-main dark:text-content-mainDark hover:bg-brand-light dark:hover:bg-brand-black transition-colors"
+              >
+                Book Setup for Core
               </button>
             </div>
 
-            {/* TIER 2: THE MID (PROFESSIONAL) - $18 (Was $20) */}
-            <div className="bg-brand-orange text-white rounded-[2rem] p-12 relative transform lg:-translate-y-4 shadow-2xl shadow-brand-orange/30 border-2 border-brand-orange flex flex-col justify-between overflow-hidden">
-              <div className="absolute -top-1 left-1/2 -translate-x-1/2 bg-brand-buttonBase text-white px-5 py-1.5 rounded-full text-[8px] font-black uppercase tracking-[0.3em] shadow-xl z-10">
-                Most Popular
+            {/* TIER 2: MERCHANT PRO (THE STRICT FEATURE SET) */}
+            <div className="bg-brand-orange text-white rounded-[2.5rem] p-10 relative shadow-2xl shadow-brand-orange/30 border-2 border-brand-orange flex flex-col justify-between overflow-hidden lg:-translate-y-4">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_3s_infinite] pointer-events-none" />
+              <div className="absolute -top-1 left-1/2 -translate-x-1/2 bg-brand-buttonBase text-white px-5 py-1.5 rounded-full text-[8px] font-black uppercase tracking-[0.3em] shadow-xl z-10 whitespace-nowrap">
+                The Full Intelligence Suite
               </div>
 
-              {/* Subtle shimmer for the featured card */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_3s_infinite] pointer-events-none" />
-
               <div>
-                <h3 className="text-3xl font-black uppercase italic tracking-tighter mb-1">Business Pro</h3>
-                <p className="text-white/80 font-black text-[10px] uppercase tracking-widest mb-6">For Growing SMEs & Retailers</p>
+                <h3 className="text-3xl font-black uppercase italic tracking-tighter mb-1">Merchant Pro</h3>
+                <p className="text-white/80 font-black text-[10px] uppercase tracking-widest mb-6">Built for Scaling Giants</p>
 
                 <div className="flex flex-col mb-8">
-                  <span className="text-[10px] font-bold text-white/40 line-through tracking-widest">$20.00</span>
+                  {saleConfig && <span className="text-[10px] font-bold text-white/40 line-through tracking-widest">$25.00</span>}
                   <div className="flex items-end gap-1">
-                    <span className="text-5xl font-black italic tracking-tighter text-white">$18.00</span>
+                    <span className="text-5xl font-black italic tracking-tighter text-white">${getPrice(25)}</span>
                     <span className="text-[10px] font-bold text-white/70 uppercase tracking-widest mb-2">/ month</span>
                   </div>
                 </div>
 
-                <div className="space-y-4 mb-10">
-                  {['Advanced Revenue Analytics', 'Dynamic Multi-QR Sync', 'CSV & PDF Data Exports', 'Priority Network Routing', '5 Employee Seats'].map((feat, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <div className="bg-white/20 p-1 rounded-full shrink-0">
-                        <Check className="w-3 h-3 text-white" />
-                      </div>
-                      <span className="text-xs font-black uppercase tracking-tight">{feat}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <button onClick={() => setShowBookConsultation(true)} className="w-full h-14 bg-white text-brand-orange rounded-xl font-black uppercase tracking-widest text-xs hover:scale-[1.02] active:scale-95 transition-transform shadow-xl">
-                Go Professional
-              </button>
-            </div>
-
-            {/* TIER 3: THE HIGH (ENTERPRISE) - $45 (Was $50) */}
-            <div className="bg-brand-buttonBase text-white rounded-[2rem] p-8 flex flex-col justify-between border border-brand-borderDark group">
-              <div>
-                <h3 className="text-2xl font-black uppercase italic tracking-tighter mb-1">Elite Merchant</h3>
-                <p className="text-zinc-500 font-black text-[10px] uppercase tracking-widest mb-6">For Full-Scale Restaurants</p>
-
-                <div className="flex flex-col mb-8">
-                  <span className="text-[10px] font-black text-zinc-600 line-through tracking-widest">$50.00</span>
-                  <div className="flex items-end gap-1">
-                    <span className="text-4xl font-black italic tracking-tighter text-white">$45.00</span>
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">/ month</span>
-                  </div>
-                </div>
-
-                <div className="space-y-4 mb-10">
+                <div className="space-y-5 mb-10">
                   {[
-                    'Interactive QR Menu Assets',
-                    'AI-Powered Sales Forecasts',
-                    'Full API Integration Access',
-                    'Dedicated Success Manager',
-                    'Unlimited Employee Seats'
+                    { label: 'AI Power Forecasting', sub: 'Real-time revenue projections' },
+                    { label: 'Graphical Trend Evaluation', sub: 'Visual business health metrics' },
+                    { label: 'Priority Network Routing', sub: 'Ultra-low latency STK delivery' },
+                    { label: 'Professional Audit Reports', sub: 'Advanced CSV & PDF data exports' }
                   ].map((feat, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <div className="bg-zinc-800 p-1 rounded-full shrink-0">
-                        <Check className="w-3 h-3 text-brand-orange" />
+                    <div key={i} className="flex items-start gap-3">
+                      <div className="bg-white/20 p-1.5 rounded-full shrink-0 mt-0.5">
+                        <Zap className="w-3.5 h-3.5 text-white fill-current" />
                       </div>
-                      <span className="text-xs font-bold text-zinc-300 uppercase tracking-tight">{feat}</span>
+                      <div className="flex flex-col">
+                        <span className="text-xs font-black uppercase tracking-tight leading-none">{feat.label}</span>
+                        <span className="text-[9px] font-bold text-white/60 uppercase tracking-wide mt-1">{feat.sub}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
-              <button onClick={() => setShowBookConsultation(true)} className="w-full h-12 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest border-none transition-colors">
-                Contact Sales
+              <button
+                onClick={() => setShowBookConsultation(true)}
+                className="w-full h-14 bg-white text-brand-orange rounded-xl font-black uppercase tracking-widest text-xs hover:scale-[1.02] active:scale-95 transition-transform shadow-xl"
+              >
+                Book Pro Consultation
               </button>
             </div>
 
+            {/* THE ADD-ON: MENU POWER-UP */}
+            <div className="bg-brand-surface dark:bg-brand-gray border-2 border-dashed border-brand-orange/30 rounded-[2.5rem] p-8 flex flex-col justify-between relative group">
+              <div className="absolute top-6 right-8 bg-brand-orange/10 text-brand-orange px-3 py-1 rounded-full text-[7px] font-black uppercase tracking-widest border border-brand-orange/20">
+                ADD-ON FEATURE: PLAN REQUIRED
+              </div>
+
+              <div>
+                <div className="w-14 h-14 bg-brand-orange/10 rounded-2xl flex items-center justify-center mb-6">
+                  <Utensils className="w-7 h-7 text-brand-orange" />
+                </div>
+                <h3 className="text-2xl font-black uppercase italic tracking-tighter text-content-main dark:text-content-mainDark mb-1 leading-none">
+                  Interactive <br /> Menu Add-on
+                </h3>
+                <p className="text-[9px] font-black text-content-muted dark:text-content-mutedDark uppercase tracking-widest mt-2 leading-relaxed">
+                  Transform your dining experience with digital self-checkout.
+                </p>
+
+                <div className="mt-8 p-4 rounded-2xl bg-brand-light dark:bg-brand-black border border-brand-borderLight dark:border-brand-borderDark">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-2xl font-black italic text-brand-orange">+$5.00</span>
+                    <span className="text-[9px] font-bold text-content-muted uppercase tracking-widest">/ month</span>
+                  </div>
+                  <p className="text-[8px] font-bold text-content-muted uppercase tracking-tight mt-1 italic">Applied to your base monthly bill</p>
+                </div>
+
+                <div className="mt-8 space-y-4">
+                  {[
+                    'QR Table Category Browsing',
+                    'High-Res Dish Visualizers',
+                    'Instant Order-to-Payment Sync',
+                    'Self-Service Checkout'
+                  ].map((feat, i) => (
+                    <div key={i} className="flex items-center gap-3 opacity-80">
+                      <Plus className="w-3 h-3 text-brand-orange" />
+                      <span className="text-[10px] font-bold text-content-main dark:text-content-mainDark uppercase tracking-tight">{feat}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowBookConsultation(true)}
+                className="w-full h-12 mt-8 rounded-xl text-[9px] font-black uppercase tracking-widest bg-brand-light dark:bg-brand-black text-brand-orange border border-brand-orange/20 hover:bg-brand-orange hover:text-white transition-all"
+              >
+                Book Menu Setup Demo
+              </button>
+            </div>
           </div>
         </div>
       </section>

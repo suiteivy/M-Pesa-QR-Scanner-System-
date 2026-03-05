@@ -4,7 +4,7 @@ import { db } from "../config/firebase.js";
 // --- UTILITY HELPERS ---
 
 /**
- * Safely converts a date object to a YYYY-MM-DD string based on LOCAL time (EAT).
+ * Safely converts a date object to a YYYY-MM-DD strggeing based on LOCAL time (EAT).
  * Prevents the -1 day shift caused by UTC conversion in .toISOString().
  */
 const getLocalDateString = (date) => {
@@ -91,31 +91,14 @@ const prepareTrendData = (summaries) => {
  * Linear Regression Trend Calculator
  * Predicts Current Period (Today) and Next Period (Tomorrow)
  */
-function calculateTrend(dataPoints) {
-  const n = dataPoints.length;
-  if (n < 2) return { slope: 0, nextPeriodPrediction: 0, currentPeriodPrediction: 0, trend: 'stable' };
+/**
+ * Predicts revenue using a hybrid of Linear Regression and Naive Forecasting
+ * @param {Array} data - Array of { x: dayIndex, y: revenue }
+ */
+/**
+ * Predicts revenue using a hybrid of Linear Regression and Naive Forecasting
+ */
 
-  let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
-  dataPoints.forEach(p => {
-    sumX += p.x;
-    sumY += p.y;
-    sumXY += (p.x * p.y);
-    sumXX += (p.x * p.x);
-  });
-
-  const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
-  const intercept = (sumY - slope * sumX) / n;
-
-  const currentVal = (slope * n) + intercept;
-  const nextVal = (slope * (n + 1)) + intercept;
-
-  return {
-    slope,
-    nextPeriodPrediction: Math.max(0, nextVal),
-    currentPeriodPrediction: Math.max(0, currentVal),
-    trend: slope > 0.5 ? 'growth' : slope < -0.5 ? 'decline' : 'stable'
-  };
-}
 
 // --- CONTROLLERS ---
 
@@ -255,6 +238,47 @@ async function fetchRawMerchantTransactions(merchantId, period, limit = null) {
 
 
 
+/**
+ * Predicts revenue using a hybrid of Weighted Linear Regression 
+ * and a recent-moving-average floor to handle outliers.
+ */
+const calculateTrend = (data) => {
+  const n = data.length;
+  if (n < 2) {
+    const val = n === 1 ? data[0].y : 0;
+    return { trend: 'stable', currentPeriodPrediction: val, nextDayRevenue: val };
+  }
+
+  // 🚀 WEIGHTED REGRESSION: Recent days (yesterday/today) have more influence
+  let sumW = 0, sumWX = 0, sumWY = 0, sumWXY = 0, sumWX2 = 0;
+  
+  data.forEach((p, i) => {
+    const weight = i + 1; 
+    sumW += weight;
+    sumWX += weight * p.x;
+    sumWY += weight * p.y;
+    sumWXY += weight * p.x * p.y;
+    sumWX2 += weight * p.x * p.x;
+  });
+
+  const slope = (sumW * sumWXY - sumWX * sumWY) / (sumW * sumWX2 - sumWX * sumWX);
+  const intercept = (sumWY - slope * sumWX) / sumW;
+
+  const todayForecast = slope * data[n - 1].x + intercept;
+  let nextDayForecast = slope * (data[n - 1].x + 1) + intercept;
+
+  // 🛡️ RECENT MOVING AVERAGE FLOOR: Use 90% of last 3 days if regression hits 0
+  const recentDays = data.slice(-3);
+  const recentAvg = recentDays.reduce((a, b) => a + b.y, 0) / recentDays.length;
+  
+  if (nextDayForecast <= 0) nextDayForecast = recentAvg * 0.9; 
+
+  return {
+    trend: slope > 0.1 ? 'growth' : (slope < -0.1 ? 'decline' : 'stable'),
+    currentPeriodPrediction: Math.max(todayForecast, data[n - 1].y),
+    nextDayRevenue: nextDayForecast
+  };
+};
 
 export async function getTransactionAnalytics(req, res) {
   try {
@@ -264,6 +288,7 @@ export async function getTransactionAnalytics(req, res) {
     let filterDate = new Date();
     filterDate.setHours(0, 0, 0, 0);
 
+    // 1. DYNAMIC TIME FILTERING
     switch (period) {
       case 'today': break;
       case 'week': filterDate.setDate(now.getDate() - 7); break;
@@ -271,9 +296,10 @@ export async function getTransactionAnalytics(req, res) {
       case 'year': filterDate.setFullYear(now.getFullYear() - 1); break;
     }
 
+    // Standardizing EAT Offset for Firestore (3-hour difference)
     const ts = admin.firestore.Timestamp.fromDate(new Date(filterDate.getTime() - (3 * 60 * 60 * 1000)));
 
-    // 1. CHEAP AGGREGATION: Get Total Revenue and Count (Cost: 1 READ)
+    // 2. AGGREGATED TOTALS
     const baseQuery = db.collection('transactions')
       .where('merchantId', '==', merchantId)
       .where('createdAt', '>=', ts);
@@ -285,75 +311,97 @@ export async function getTransactionAnalytics(req, res) {
 
     const { totalRevenue, count } = aggSnapshot.data();
 
-    // 2. DATA BUCKETING: We still need docs for the chart, but we limit fields if possible
-    // (Firestore currently requires doc reads for daily grouping)
+    // 3. DATA PROCESSING & BUCKETING
     const docsSnapshot = await baseQuery.get();
     const dailyMap = {};
-    for (let d = new Date(filterDate); d <= now; d.setDate(d.getDate() + 1)) {
-      const key = getEATDateString(d);
-      dailyMap[key] = { date: key, totalRevenue: 0, count: 0 };
-    }
-
     const hoursMap = new Array(24).fill(0);
     let qrRevenue = 0;
     let qrCount = 0;
 
-// Inside getTransactionAnalytics loop:
-docsSnapshot.forEach(doc => {
-  const t = doc.data();
-  const dateObj = convertFirestoreTimestamp(t.createdAt);
-  if (dateObj) {
-    const dateKey = getEATDateString(dateObj);
-    if (dailyMap[dateKey]) {
-      // 1. Revenue & Success Count
-      if (t.status === 'success') {
-        dailyMap[dateKey].totalRevenue += Number(t.amount);
-        dailyMap[dateKey].count++;
-      }
-      // 2. Pending Count (Always tracked)
-      if (t.status === 'pending') {
-        dailyMap[dateKey].pendingCount = (dailyMap[dateKey].pendingCount || 0) + 1;
-      }
-      // 3. Failed Count (Always tracked)
-      if (['failed', 'error'].includes(t.status)) {
-        dailyMap[dateKey].failedCount = (dailyMap[dateKey].failedCount || 0) + 1;
-      }
+    // Initialize map to prevent gaps in chart visual
+    for (let d = new Date(filterDate); d <= now; d.setDate(d.getDate() + 1)) {
+      const key = getEATDateString(d);
+      dailyMap[key] = { date: key, totalRevenue: 0, count: 0, pendingCount: 0, failedCount: 0 };
     }
-  }
-});
+
+    docsSnapshot.forEach(doc => {
+      const t = doc.data();
+      const dateObj = convertFirestoreTimestamp(t.createdAt);
+      if (dateObj) {
+        const dateKey = getEATDateString(dateObj);
+        const hour = dateObj.getHours();
+
+        if (dailyMap[dateKey]) {
+          if (t.status === 'success') {
+            const amt = Number(t.amount || 0);
+            dailyMap[dateKey].totalRevenue += amt;
+            dailyMap[dateKey].count++;
+            hoursMap[hour] += amt;
+
+            // Fix for the 0 stats: Track QR specific revenue
+            if (t.source === 'qr_generated' || t.qrData) {
+              qrRevenue += amt;
+              qrCount++;
+            }
+          } else if (t.status === 'pending') {
+            dailyMap[dateKey].pendingCount++;
+          } else if (['failed', 'error', 'cancelled'].includes(t.status)) {
+            dailyMap[dateKey].failedCount++;
+          }
+        }
+      }
+    });
 
     const sortedSummaries = Object.values(dailyMap).sort((a, b) => a.date.localeCompare(b.date));
-    const trendData = sortedSummaries.map((day, i) => ({
-      x: i + 1,
-      y: i === sortedSummaries.length - 1 ? getNormalizedTodayRevenue(day.totalRevenue) : day.totalRevenue
-    }));
+
+    // 4. 🔥 REVENUE FORECASTING PIPELINE
+    const trendData = sortedSummaries.map((day, i) => {
+      const isToday = i === sortedSummaries.length - 1;
+      let revenue = Number(day.totalRevenue || 0);
+
+      // Scale "Today" based on current run-rate to prevent AI "crash" projection
+      if (isToday && revenue > 0) {
+        revenue = getNormalizedTodayRevenue(revenue);
+      }
+      return { x: i + 1, y: revenue };
+    });
+
     const prediction = calculateTrend(trendData);
 
-    // 3. PAGINATED RECENT LIST: Only fetch the first few (Cost: 'limit' READS)
+    // 5. PAGINATED RECENT LIST
     const recentDocs = docsSnapshot.docs
       .map(d => serializeTransaction({ id: d.id, ...d.data() }))
       .filter(t => status === 'all' || t.status === status)
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       .slice(0, Number(limit));
 
+    // 6. RESPONSE
     res.status(200).json({
       status: 'success',
       analytics: {
         period,
-        summary: { totalTransactions: count, totalRevenue, qrRevenue, qrCount },
+        summary: { 
+          totalTransactions: count || 0, 
+          totalRevenue: totalRevenue || 0,
+          qrRevenue: qrRevenue || 0,
+          qrCount: qrCount || 0
+        },
         insights: {
           peakTradingHour: `${hoursMap.indexOf(Math.max(...hoursMap)).toString().padStart(2, '0')}:00`,
           prediction: {
             trendDirection: prediction.trend,
             todayRevenueForecast: Math.round(prediction.currentPeriodPrediction),
-            nextDayRevenue: Math.round(prediction.nextPeriodPrediction)
+            nextDayRevenue: Math.round(prediction.nextDayRevenue)
           }
         },
         dailySummaries: sortedSummaries
       },
       transactions: recentDocs
     });
+    console.log(res.json());
+
   } catch (error) {
+    console.error("Analytics Failure:", error);
     res.status(500).json({ status: 'error', message: error.message });
   }
 }

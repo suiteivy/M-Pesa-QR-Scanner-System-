@@ -16,55 +16,32 @@ const AnalyticsModule = ({ analytics }) => {
     }
   }, [analytics]);
 
-  const processVisualization = (data) => {
-    if (!data?.dailySummaries || data.dailySummaries.length === 0) return;
+const processVisualization = (data) => {
+  if (!data?.dailySummaries) return;
 
-    const sortedRawData = [...data.dailySummaries].sort((a, b) =>
-      new Date(a.date).getTime() - new Date(b.date).getTime()
-    );
+  const history = data.dailySummaries.map((day, index) => {
+    const isToday = new Date(day.date).toDateString() === new Date().toDateString();
+    
+    return {
+      date: isToday ? "Today" : day.date,
+      actualRevenue: Number(day.totalRevenue),
+      // Ensure the trend line connects even if not in 'trend' mode
+      forecastRevenue: isToday ? Number(day.totalRevenue) : null 
+    };
+  });
 
-    const isLongPeriod = sortedRawData.length > 7;
-    const lastIndex = sortedRawData.length - 1;
-    const todayStr = new Date().toDateString();
-
-    let history = sortedRawData.map((day, index) => {
-      const d = new Date(day.date);
-      const isToday = d.toDateString() === todayStr;
-      const isOngoingDay = index === lastIndex;
-
-      // Determine label: Show "Today" if it's the current date
-      let dateLabel = isLongPeriod
-        ? d.toLocaleDateString('en-KE', { month: 'short', day: 'numeric' })
-        : d.toLocaleDateString('en-KE', { weekday: 'short' });
-      
-      if (isToday) dateLabel = "Today";
-
-      return {
-        fullDate: day.date,
-        date: dateLabel,
-        actualRevenue: Number(day.totalRevenue || 0),
-        // We only show forecastRevenue for the "Tomorrow" node or the transition point.
-        // To hide the orange bar Today, we set forecastRevenue to null in Bar mode, 
-        // but keep it for Trend mode to connect lines.
-        forecastRevenue: (viewMode === 'trend' && isOngoingDay) 
-          ? Number(day.totalRevenue || 0) 
-          : null,
-        isOngoingDay
-      };
+  // Inject the AI Forecast point
+  if (data.insights?.prediction?.nextDayRevenue > 0) {
+    history.push({
+      date: 'Tomorrow',
+      actualRevenue: null, // No actual revenue yet
+      forecastRevenue: Number(data.insights.prediction.nextDayRevenue),
+      isForecast: true // Useful for styling the bar differently (e.g., dashed or lighter orange)
     });
+  }
 
-    // Add "Tomorrow" Forecast
-    if (data.insights?.prediction && (data.period === 'week' || data.period === 'today')) {
-      history.push({
-        date: 'Tomorrow',
-        actualRevenue: null, 
-        forecastRevenue: Number(data.insights.prediction.nextDayRevenue || 0),
-        isOngoingDay: false
-      });
-    }
-
-    setChartData(history);
-  };
+  setChartData(history);
+};
 
   const processPieData = (data) => {
     if (!data?.dailySummaries) return [];
