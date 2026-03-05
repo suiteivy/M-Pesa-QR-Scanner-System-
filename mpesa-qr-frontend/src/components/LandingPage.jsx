@@ -374,7 +374,7 @@ const LandingPage = () => {
                 <div className="flex flex-col mb-8">
                   {saleConfig && <span className="text-[10px] font-bold text-white/40 line-through tracking-widest">$25.00</span>}
                   <div className="flex items-end gap-1">
-                    <span className="text-5xl font-black italic tracking-tighter text-white">${getPrice(25)}</span>
+                    <span className="text-5xl font-black italic tracking-tighter text-white">${getPrice(50)}</span>
                     <span className="text-[10px] font-bold text-white/70 uppercase tracking-widest mb-2">/ month</span>
                   </div>
                 </div>
@@ -425,7 +425,7 @@ const LandingPage = () => {
 
                 <div className="mt-8 p-4 rounded-2xl bg-brand-light dark:bg-brand-black border border-brand-borderLight dark:border-brand-borderDark">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-black italic text-brand-orange">+$5.00</span>
+                    <span className="text-2xl font-black italic text-brand-orange">+$10.00</span>
                     <span className="text-[9px] font-bold text-content-muted uppercase tracking-widest">/ month</span>
                   </div>
                   <p className="text-[8px] font-bold text-content-muted uppercase tracking-tight mt-1 italic">Applied to your base monthly bill</p>
