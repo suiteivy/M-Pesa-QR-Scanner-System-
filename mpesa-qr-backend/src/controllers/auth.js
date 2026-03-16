@@ -464,7 +464,6 @@ async function verifyAndFetchProfile(req, res) {
 }
 
 
-import { admin, db } from "../config/firebase.js";
 
 // --- 1. Update Business Profile (Name, Shortcode, Account Type) ---
 export const updateMerchantProfile = async (req, res) => {
