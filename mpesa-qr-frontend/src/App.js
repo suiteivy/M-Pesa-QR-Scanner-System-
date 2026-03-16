@@ -60,7 +60,7 @@ const AppRoutes = () => {
         <Route path="/dashboard" element={<MerchantDashboard />} />
         <Route path="/generate-qr" element={<MerchantQRGenerator />} />
         <Route path="/transactions" element={<Transactions />} />
-        <Route path="/payment-scanner" element={<QRPaymentScanner />} />
+        <Route path="/payment-scanner" element={<PublicQRScanner/>} />
       </Route>
 
       {/* Fallback */}

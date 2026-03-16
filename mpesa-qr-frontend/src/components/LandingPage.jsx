@@ -215,7 +215,7 @@ const LandingPage = () => {
             {/* STARTER */}
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] p-8 md:p-10 relative hover:border-brand-orange/50 transition-colors">
               <h3 className="text-3xl font-black uppercase italic tracking-tighter text-zinc-950 dark:text-white mb-2">Starter</h3>
-              <p className="text-zinc-500 font-bold text-xs uppercase tracking-wide mb-6">10-Day Free Trial</p>
+              <p className="text-zinc-500 font-bold text-xs uppercase tracking-wide mb-6">1 Hour Free Trial ($10 per month)</p>
 
               <div className="space-y-4 mb-10">
                 {['Unlimited QR Generation', 'Instant STK Pushes', 'Basic Digital Receipts'].map((feat, i) => (
@@ -236,7 +236,7 @@ const LandingPage = () => {
                 Most Popular
               </div>
               <h3 className="text-3xl font-black uppercase italic tracking-tighter mb-2">Pro</h3>
-              <p className="text-zinc-800 font-bold text-xs uppercase tracking-wide mb-6">KES 1,500 / month</p>
+              <p className="text-zinc-800 font-bold text-xs uppercase tracking-wide mb-6">$50 / month</p>
 
               <div className="space-y-4 mb-10">
                 {['Everything in Starter', 'AI Revenue Analytics', 'Transaction Export (CSV)', 'Priority Support'].map((feat, i) => (
@@ -254,7 +254,7 @@ const LandingPage = () => {
             {/* ADD ON */}
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] p-8 md:p-10 relative hover:border-zinc-400 transition-colors">
               <h3 className="text-3xl font-black uppercase italic tracking-tighter text-zinc-950 dark:text-white mb-2">Menu Add-on</h3>
-              <p className="text-zinc-500 font-bold text-xs uppercase tracking-wide mb-6">+ KES 500 / month</p>
+              <p className="text-zinc-500 font-bold text-xs uppercase tracking-wide mb-6">+$10 / month</p>
 
               <div className="space-y-4 mb-10">
                 {['Digital QR Menus', 'Inventory Tracking', 'Direct Menu Ordering'].map((feat, i) => (
