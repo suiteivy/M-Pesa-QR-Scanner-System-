@@ -227,8 +227,8 @@ const QRPaymentScanner = ({ onPaymentInitiated, onNavigateToLanding }) => {
         amount: parseFloat(amount),
         qrData: {
           merchantId: qrData.merchantId || `qr-${Date.now()}`,
-          name: qrData.merchantName || QrData.name || 'QR Merchant',
-          businessShortCode: qrData.businessShortCode || MPESA_CONFIG.SANDBOX_SHORTCODE
+          name: qrData.merchantName || qrData.name || 'QR Merchant',
+          businessShortCode: qrData.shortcode || MPESA_CONFIG.SANDBOX_SHORTCODE
         }
       };
 
@@ -236,7 +236,7 @@ const QRPaymentScanner = ({ onPaymentInitiated, onNavigateToLanding }) => {
 
       if (result.success) {
         const paymentData = {
-          merchantName: qrData.merchantName || QrData.name || "QR Merchant",
+          merchantName: qrData.merchantName || qrData.name || "QR Merchant",
           phoneNumber,
           amount: parseFloat(amount),
           timestamp: new Date(),

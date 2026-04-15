@@ -17,6 +17,7 @@ import ThemeToggle from './ui/Toggle';
 import AnalyticsModule from './AnalyticsModule'; 
 import { API_BASE_URL } from '../utility/constants'; 
 import PublicQRScanner from './PublicQRScanner';
+ // Ensure environment variables are loaded
 
 const MerchantDashboard = () => {
   const { user, merchantData, logout } = useAuth();
@@ -35,11 +36,13 @@ const MerchantDashboard = () => {
   // --- STRICT DEMO CLOCK STATE ---
   const [timeLeft, setTimeLeft] = useState(null);
   const [isDemoExpired, setIsDemoExpired] = useState(false);
+  const  isdemo = process.env.REACT_APP_NODE_ENV === 'development'; // Only enforce in development builds
 
+if (isdemo) {
   useEffect(() => {
     // 1. Force initialization: If they land here, they are a demo user.
     let demoStart = localStorage.getItem('demo_start_time');
-    if (!demoStart) {
+    if (!demoStart && isdemo) {
       demoStart = Date.now().toString();
       localStorage.setItem('demo_start_time', demoStart);
     }
@@ -64,6 +67,8 @@ const MerchantDashboard = () => {
 
     return () => clearInterval(interval);
   }, []);
+
+  }
 
   const formatCurrency = (amount) => `KSH ${parseFloat(amount || 0).toFixed(2)}`;
 
@@ -199,7 +204,7 @@ return (
     <div className="min-h-screen bg-brand-light dark:bg-brand-black text-content-main dark:text-content-mainDark transition-colors duration-300">
 
       {/* --- BANNER STATE 1: DEMO ACTIVE --- */}
-      {!isDemoExpired && timeLeft && (
+      {!isDemoExpired && timeLeft && isdemo && (
         <div className="bg-brand-orange text-white px-4 py-3 text-center flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 shadow-md z-50 relative animate-in slide-in-from-top-4">
           <p className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
             <Clock className="w-4 h-4 animate-pulse" />
@@ -215,7 +220,7 @@ return (
       )}
 
       {/* --- BANNER STATE 2: DEMO EXPIRED --- */}
-      {isDemoExpired && (
+      {isDemoExpired && isdemo && (
         <div className="bg-status-errorBg text-status-error border-b border-status-error/20 px-4 py-3 text-center flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 shadow-md z-40 relative animate-in slide-in-from-top-4">
           <p className="text-xs font-bold uppercase tracking-wider flex items-center gap-2">
             <AlertCircle className="w-4 h-4" />
@@ -242,7 +247,7 @@ return (
                 Merchant<span className="text-brand-orange">Pro</span>
               </h1>
               <p className="text-[9px] md:text-[10px] text-content-muted dark:text-content-mutedDark font-bold uppercase tracking-widest mt-0.5 truncate max-w-[120px] sm:max-w-[150px]">
-                Interactive Sandbox
+                ID: {merchantData?.name || 'N/A'} | {merchantData?.accountType || 'Unknown Business'}
               </p>
             </div>
           </div>

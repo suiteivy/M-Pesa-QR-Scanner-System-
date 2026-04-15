@@ -38,44 +38,48 @@ const LandingPage = () => {
 
       {/* --- 1. ORIENTATION: CLEAR NAVIGATION --- */}
       {/* HCI Principle: Always visible navigation provides an 'escape hatch' and site map */}
-      <nav className="fixed top-0 w-full z-50 border-b border-zinc-200 dark:border-brand-gray/50 backdrop-blur-xl bg-white/90 dark:bg-brand-black/90">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 h-20 flex items-center justify-between">
+<nav className="fixed top-0 w-full z-50 border-b border-zinc-200 dark:border-brand-gray/50 backdrop-blur-xl bg-white/90 dark:bg-brand-black/90">
+  <div className="max-w-7xl mx-auto px-4 md:px-6 h-20 flex items-center justify-between">
 
-          {/* Logo / Home Anchor */}
-          <div className="flex items-center gap-2 md:gap-3 cursor-pointer group" onClick={() => scrollToSection('top')}>
-            <div className="bg-brand-orange p-2 rounded-xl shadow-lg shadow-brand-orange/20 group-hover:scale-105 transition-transform">
-              <Zap className="w-5 h-5 text-zinc-950 fill-current" />
-            </div>
-            <span className="text-xl font-black tracking-tighter uppercase italic dark:text-white">
-              Merchant<span className="text-brand-orange">Pro</span>
-            </span>
-          </div>
+    {/* Logo / Home Anchor */}
+    <div className="flex items-center gap-2 md:gap-3 cursor-pointer group" onClick={() => scrollToSection('top')}>
+      <div className="bg-brand-orange p-2 rounded-xl shadow-lg shadow-brand-orange/20 group-hover:scale-105 transition-transform">
+        <Zap className="w-5 h-5 text-zinc-950 fill-current" />
+      </div>
+      <span className="text-xl font-black tracking-tighter uppercase italic dark:text-white">
+        Merchant<span className="text-brand-orange">Pro</span>
+      </span>
+    </div>
 
-          {/* Desktop Section Links */}
-          <div className="hidden lg:flex items-center gap-8">
-            <button onClick={() => scrollToSection('how-it-works')} className="text-xs font-black uppercase tracking-widest text-zinc-500 hover:text-brand-orange transition-colors">How it Works</button>
-            <button onClick={() => scrollToSection('features')} className="text-xs font-black uppercase tracking-widest text-zinc-500 hover:text-brand-orange transition-colors">Features</button>
-            <button onClick={() => scrollToSection('pricing')} className="text-xs font-black uppercase tracking-widest text-zinc-500 hover:text-brand-orange transition-colors">Pricing</button>
-          </div>
+    {/* Desktop Section Links */}
+    <div className="hidden lg:flex items-center gap-8">
+      <button onClick={() => scrollToSection('how-it-works')} className="text-xs font-black uppercase tracking-widest text-zinc-500 hover:text-brand-orange transition-colors">How it Works</button>
+      <button onClick={() => scrollToSection('features')} className="text-xs font-black uppercase tracking-widest text-zinc-500 hover:text-brand-orange transition-colors">Features</button>
+      <button onClick={() => scrollToSection('pricing')} className="text-xs font-black uppercase tracking-widest text-zinc-500 hover:text-brand-orange transition-colors">Pricing</button>
+      
+      {/* NEW: Booking Tab */}
+      <button onClick={() => navigate('/book-consultation'
+)} className="text-xs font-black uppercase tracking-widest text-zinc-500 hover:text-brand-orange transition-colors">Book Demo</button>
+    </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-4">
-            <ThemeToggle />
-            <button
-              onClick={() => navigate('/login')}
-              className="hidden md:block text-xs font-black uppercase tracking-[0.2em] text-zinc-500 hover:text-zinc-950 dark:hover:text-white transition-colors"
-            >
-              Login
-            </button>
-            <button
-              onClick={() => navigate('/register')}
-              className="h-10 px-5 md:px-6 bg-brand-orange text-zinc-950 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-brand-orange/20 hover:scale-105 active:scale-95 transition-all"
-            >
-              Create Account
-            </button>
-          </div>
-        </div>
-      </nav>
+    {/* Actions */}
+    <div className="flex items-center gap-4">
+      <ThemeToggle />
+      <button
+        onClick={() => navigate('/login')}
+        className="hidden md:block text-xs font-black uppercase tracking-[0.2em] text-zinc-500 hover:text-zinc-950 dark:hover:text-white transition-colors"
+      >
+        Login
+      </button>
+      <button
+        onClick={() => navigate('/register')}
+        className="h-10 px-5 md:px-6 bg-brand-orange text-zinc-950 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-brand-orange/20 hover:scale-105 active:scale-95 transition-all"
+      >
+        Create Account
+      </button>
+    </div>
+  </div>
+</nav>
 
       {/* --- 2. THE HERO: WHAT IS THIS? --- */}
       {/* HCI Principle: Value Proposition must be instantly readable without jargon. */}

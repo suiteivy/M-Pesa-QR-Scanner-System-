@@ -14,7 +14,7 @@ import QRPaymentScanner from './components/QRPaymentScanner';
 import PayPrompt from "./components/PayPrompt";
 import PublicMenuPage from './components/PublicMenuPage';
 import LandingPage from './components/LandingPage';
-
+import BookConsultation from './components/BookConsultation';
 // Utilities
 import PrivateRoute from './utility/PrivateRoute';
 import { SubscriptionProvider } from './hooks/SubscriptionProvider';
@@ -61,6 +61,7 @@ const AppRoutes = () => {
         <Route path="/generate-qr" element={<MerchantQRGenerator />} />
         <Route path="/transactions" element={<Transactions />} />
         <Route path="/payment-scanner" element={<PublicQRScanner/>} />
+        <Route path="/book-consultation" element={<BookConsultation />} />
       </Route>
 
       {/* Fallback */}
