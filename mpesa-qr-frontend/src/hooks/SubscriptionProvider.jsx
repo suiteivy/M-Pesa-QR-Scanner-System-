@@ -2,65 +2,54 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { db } from '../firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { useAuth } from './useAuth';
-import { Loader2, ShieldCheck } from 'lucide-react'; 
+import { Loader2, ShieldCheck } from 'lucide-react';
 
 const SubscriptionContext = createContext();
 
 export const SubscriptionProvider = ({ children }) => {
-  const { user, loading: authLoading } = useAuth(); 
+  // Grab auth state
+  const { user, loading: authLoading } = useAuth();
+  // Anonymous users are free-trial users. They have no merchant document in Firestore,
+  // so running the subscription check against them would always return isValid: false.
+  // We skip the entire gate for them and let the TrialDashboard manage its own state.
+  const isAnonymousUser = user?.isAnonymous === true;
   
   const [subState, setSubState] = useState({
     tier: 'CORE',
     status: 'TRIALING',
-    isValid: false, 
+    isValid: false, // Starts locked, but we won't show it until loading is done
     menuEnabled: false,
     loading: true, 
     isBoarded: false
   });
 
-  // --- 1. REAL-TIME DATABASE SYNC ---
   useEffect(() => {
+    // 2. THE GATEKEEPER: If Auth is still loading, freeze! Do nothing yet.
     if (authLoading) return;
 
+    // 3. Auth is done. If they aren't logged in, kill the loader.
     if (!user) {
       setSubState(prev => ({ ...prev, loading: false, isValid: false }));
       return;
     }
 
+    // 4. They are logged in! Fetch the real data.
     const unsub = onSnapshot(doc(db, 'merchants', user.uid), (docSnapshot) => {
       if (docSnapshot.exists()) {
         const data = docSnapshot.data();
-        const now = Date.now();
+        const now = new Date();
         
+        // Safely extract the expiry date
         let expiryDate = null;
         if (data.subscription?.expiry) {
           expiryDate = typeof data.subscription.expiry.toDate === 'function' 
-            ? data.subscription.expiry.toDate().getTime() 
-            : new Date(data.subscription.expiry).getTime(); 
+            ? data.subscription.expiry.toDate() 
+            : new Date(data.subscription.expiry); 
         }
 
-        let isWithinTimeframe = expiryDate ? now < expiryDate : false;
+        const isWithinTimeframe = expiryDate ? now < expiryDate : false;
         const statusActive = data.subscription?.status === 'ACTIVE';
         const isTrialing = data.subscription?.status === 'TRIALING';
-
-        // --- ⚡️ THE 1-HOUR LOCAL DEMO GUARD ---
-        // If they are using the demo account, override the database expiry with a local 1-hour session
-        if (user.email === 'admin@cloudora.com') { // Use your exact demo email here
-          let demoStart = localStorage.getItem('demo_start_time');
-          
-          // If this is their first time logging in, start the 1-hour timer
-          if (!demoStart) {
-            demoStart = now.toString();
-            localStorage.setItem('demo_start_time', demoStart);
-          }
-          
-          // Calculate exactly 60 minutes from when they first logged in
-          const ONE_HOUR_MS = 60 * 60 * 1000;
-          const demoExpiry = parseInt(demoStart, 10) + ONE_HOUR_MS;
-          
-          // Override the valid check: They are valid ONLY if the current time is before their local expiry
-          isWithinTimeframe = now < demoExpiry;
-        }
 
         setSubState({
           tier: data.subscription?.tier || 'CORE',
@@ -68,9 +57,10 @@ export const SubscriptionProvider = ({ children }) => {
           isValid: (statusActive || isTrialing) && isWithinTimeframe,
           menuEnabled: data.addons?.menuEnabled || false,
           isBoarded: data.metadata?.isBoarded || false,
-          loading: false 
+          loading: false // DATA SECURED! Unlock the UI.
         });
       } else {
+        // Doc doesn't exist yet
         setSubState(prev => ({ ...prev, loading: false, isValid: false }));
       }
     }, (error) => {
@@ -79,48 +69,36 @@ export const SubscriptionProvider = ({ children }) => {
     });
 
     return () => unsub();
-  }, [user, authLoading]);
+  }, [user, authLoading]); // Added authLoading to the dependency array
 
-  // --- 2. LIVE COUNTDOWN KICKER ---
-  // This interval runs every 10 seconds to ensure they are booted out instantly when the hour is up,
-  // without needing to refresh the page.
-  useEffect(() => {
-    if (subState.isValid && user?.email === 'admin@cloudora.com') {
-      const interval = setInterval(() => {
-        const demoStart = localStorage.getItem('demo_start_time');
-        if (demoStart) {
-          const ONE_HOUR_MS = 60 * 60 * 1000;
-          const hasExpired = Date.now() > parseInt(demoStart, 10) + ONE_HOUR_MS;
-          
-          if (hasExpired) {
-            // Trigger the SubscriptionShield instantly
-            setSubState(prev => ({ ...prev, isValid: false, status: 'EXPIRED' }));
-            clearInterval(interval);
-          }
-        }
-      }, 10000); 
+  // Anonymous users are trial users. Skip the subscription gate for them entirely.
+  if (isAnonymousUser) {
+    return (
+      <SubscriptionContext.Provider value={subState}>
+        {children}
+      </SubscriptionContext.Provider>
+    );
+  }
 
-      return () => clearInterval(interval);
-    }
-  }, [subState.isValid, user]);
-
+  // For all other routes: show the license verification screen while loading.
   if (subState.loading || authLoading) {
     return (
-      <div className="min-h-screen bg-brand-light dark:bg-brand-black flex flex-col items-center justify-center animate-in fade-in duration-500">
-        <div className="bg-brand-orange/10 p-5 rounded-3xl mb-6 relative border border-brand-orange/20">
-          <ShieldCheck className="w-10 h-10 text-brand-orange relative z-10" />
-          <div className="absolute inset-0 border-2 border-brand-orange/30 rounded-3xl animate-ping opacity-20" />
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center animate-in fade-in duration-500">
+        <div className="bg-orange-600/10 p-5 rounded-3xl mb-6 relative">
+          <ShieldCheck className="w-10 h-10 text-orange-600 relative z-10" />
+          <div className="absolute inset-0 border-2 border-orange-600/30 rounded-3xl animate-ping opacity-20" />
         </div>
         <div className="flex items-center gap-3">
-          <Loader2 className="w-4 h-4 text-brand-orange animate-spin" />
-          <p className="text-content-muted dark:text-content-mutedDark text-xs font-black uppercase tracking-[0.2em]">
-            Securing Demo Session
+          <Loader2 className="w-4 h-4 text-orange-600 animate-spin" />
+          <p className="text-zinc-600 dark:text-zinc-400 text-xs font-black uppercase tracking-[0.2em]">
+            Verifying License
           </p>
         </div>
       </div>
     );
   }
 
+  // Once loading is completely false, render the actual app
   return (
     <SubscriptionContext.Provider value={subState}>
       {children}

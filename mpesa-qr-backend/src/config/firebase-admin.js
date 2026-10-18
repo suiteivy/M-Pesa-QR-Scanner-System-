@@ -1,19 +1,33 @@
-import * as admin from "firebase-admin"; // Imports everything as 'admin'
-import { initializeApp, cert } from "firebase-admin/app";
+import * as admin from "firebase-admin";
+import { initializeApp, cert, getApps, getApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
-import { createRequire } from "module";
-const require = createRequire(import.meta.url);
-const serviceAccount = require("../qr-payment-adminsdk.json");
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const serviceAccountPath = path.resolve(__dirname, "../qr-payment-adminsdk.json");
 
-const app = initializeApp({
-  credential: cert(serviceAccount),
-  projectId: serviceAccount.project_id,
-});
+let app = null;
+let auth = null;
+let db = null;
 
-const auth = getAuth(app);
-const db = getFirestore(app);
+if (fs.existsSync(serviceAccountPath)) {
+  try {
+    const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
+    app = !getApps().length ? initializeApp({
+      credential: cert(serviceAccount),
+      projectId: serviceAccount.project_id,
+    }) : getApp();
+    auth = getAuth(app);
+    db = getFirestore(app);
+  } catch (err) {
+    console.warn("⚠️ Firebase Admin Init Error:", err.message);
+  }
+} else {
+  console.warn("⚠️ firebase-admin.js: qr-payment-adminsdk.json not found. Admin SDK skipped.");
+}
 
-// Exporting both the specific services and the full admin object
 export { admin, auth, db };

@@ -1,22 +1,28 @@
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore'; // Essential for Subscription Sync
+import { getFirestore } from 'firebase/firestore';
 
-// Vite uses import.meta.env instead of process.env
+const rawApiKey = process.env.REACT_APP_FIREBASE_API_KEY;
+const isApiKeyConfigured = rawApiKey && rawApiKey !== 'your_firebase_api_key_here';
+
 const firebaseConfig = {
-  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
-  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.REACT_APP_FIREBASE_APP_ID,
+  apiKey: isApiKeyConfigured ? rawApiKey : "AIzaSy_PLACEHOLDER_API_KEY_PLEASE_UPDATE_ENV",
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || "qr-payment-8a0f0.firebaseapp.com",
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID || "qr-payment-8a0f0",
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || "qr-payment-8a0f0.appspot.com",
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || "100000000000",
+  appId: process.env.REACT_APP_FIREBASE_APP_ID || "1:100000000000:web:abcdef123456",
   measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+if (!isApiKeyConfigured) {
+  console.warn(
+    "⚠️ Firebase API Key is not configured in mpesa-qr-frontend/.env - using safe placeholder until key is provided."
+  );
+}
 
-// Export Services
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+
 export const auth = getAuth(app);
-export const db = getFirestore(app); // This is what the SubscriptionProvider will use
+export const db = getFirestore(app);
 export default app;

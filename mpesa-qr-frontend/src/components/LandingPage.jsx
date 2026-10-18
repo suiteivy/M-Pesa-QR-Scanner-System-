@@ -1,5 +1,7 @@
-import { React } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { useFreeTrial } from '../hooks/FreeTrialContext';
+import TrialOverModal from './TrialOverModal';
 import {
   QrCode,
   Zap,
@@ -8,32 +10,54 @@ import {
   ShieldCheck,
   DollarSign,
   ArrowUpRight,
-  ArrowRight,   // <--- NEW IMPORT
-  LinkIcon,    // <--- NEW IMPORT (You can replace this with an appropriate icon from lucide-react)
-  ScanFace,    // <--- NEW IMPORT (You can replace this with an appropriate icon from lucide-react)
+  ArrowRight,
+  LinkIcon,
+  ScanFace,
   Menu,
-  Check,       // <--- NEW IMPORT
-  Utensils,    // <--- NEW IMPORT
-  Plus,        // <--- NEW IMPORT
-  Gift,
-  X,
-  Clock,
-
-
-
+  Check,
+  Utensils,
+  Plus,
+  X
 } from 'lucide-react';
-
-
 
 import ThemeToggle from './ui/Toggle';
 import Badge from './ui/Badge';
-import BookConsultation from './BookConsultation';
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { API_BASE_URL } from '../utility/constants';
+
 const LandingPage = () => {
   const navigate = useNavigate();
-  const [showBookConsultation, setShowBookConsultation] = useState(false);
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { startTrial, isTrialActive, isTrialExpired, hasUsedTrial } = useFreeTrial();
+  const [showTrialOverModal, setShowTrialOverModal] = useState(false);
+  const [showPricingModal, setShowPricingModal] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get('pricing') === 'true') setShowPricingModal(true);
+  }, [searchParams]);
+
+  const closePricingModal = React.useCallback(() => {
+    const returnTo = location.state?.returnTo;
+    if (typeof returnTo === 'string') {
+      navigate(returnTo, { replace: true });
+      return;
+    }
+
+    setShowPricingModal(false);
+    if (searchParams.has('pricing')) {
+      const nextSearchParams = new URLSearchParams(searchParams);
+      nextSearchParams.delete('pricing');
+      setSearchParams(nextSearchParams, { replace: true });
+    }
+  }, [location.state, navigate, searchParams, setSearchParams]);
+
+  useEffect(() => {
+    if (!showPricingModal) return undefined;
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') closePricingModal();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showPricingModal, closePricingModal]);
 
   const scrollToSection = (id) => {
     const element = document.getElementById(id);
@@ -42,227 +66,144 @@ const LandingPage = () => {
     }
   };
 
-
-
-  const [saleConfig, setSaleConfig] = useState(null);
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-
-  useEffect(() => {
-    const syncSaleWithBackend = async () => {
-      try {
-        // 🚀 1. Fetch the master config from your Public API
-        const response = await axios.get(`${API_BASE_URL}/api/marketing/marketing-config`);
-
-        if (response.data.status === 'success') {
-          const data = response.data.config;
-
-          if (data?.isActive) {
-            const endTime = new Date(data.expiresAt).getTime();
-            setSaleConfig(data);
-
-            // 2. Start the synchronized timer
-            const interval = setInterval(() => {
-              const now = new Date().getTime();
-              const distance = endTime - now;
-
-              if (distance < 0) {
-                clearInterval(interval);
-                setSaleConfig(null); // Hide sale UI immediately on expiry
-              } else {
-                setTimeLeft({
-                  days: Math.floor(distance / (1000 * 60 * 60 * 24)),
-                  hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-                  minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
-                  seconds: Math.floor((distance % (1000 * 60)) / 1000)
-                });
-              }
-            }, 1000);
-
-            return () => clearInterval(interval);
-          }
-        }
-      } catch (err) {
-        console.error("Flash sale sync failed. Reverting to standard prices:", err);
-      }
-    };
-
-    syncSaleWithBackend();
-  }, []);
-
-  const getPrice = (base) => {
-    if (!saleConfig) return base.toFixed(2);
-    const discount = base * (saleConfig.discountPercent / 100);
-    return (base - discount).toFixed(2);
+  // Start a trial session and navigate directly to the trial dashboard
+  const handleStartTrial = () => {
+    if (hasUsedTrial || isTrialExpired) {
+      setShowTrialOverModal(true);
+      return;
+    }
+    startTrial();
+    navigate('/trial');
   };
 
   return (
-    <div className="min-h-screen w-full bg-brand-light dark:bg-brand-black text-content-main dark:text-content-mainDark transition-colors duration-500 overflow-x-hidden scroll-smooth">
+    // 1. GLOBAL CONTAINER
+    <div className="min-h-screen w-full bg-white dark:bg-brand-black text-zinc-950 dark:text-white transition-colors duration-500 overflow-x-hidden scroll-smooth">
 
-      {/* --- 1. NAVIGATION --- */}
-      <nav className="fixed top-0 w-full z-50 border-b border-brand-borderLight dark:border-brand-borderDark backdrop-blur-xl bg-brand-light/90 dark:bg-brand-black/90">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 h-20 flex items-center justify-between">
+      {/* --- 1. ORIENTATION: CLEAR NAVIGATION --- */}
+      {/* HCI Principle: Always visible navigation provides an 'escape hatch' and site map */}
+<nav className="fixed top-0 w-full z-50 border-b border-zinc-200 dark:border-brand-gray/50 backdrop-blur-xl bg-white/90 dark:bg-brand-black/90">
+  <div className="max-w-7xl mx-auto px-4 md:px-6 h-20 flex items-center justify-between">
 
-          <div className="flex items-center gap-2 md:gap-3 cursor-pointer group" onClick={() => scrollToSection('top')}>
-            <div className="bg-brand-orange p-2 rounded-xl shadow-lg shadow-brand-orange/20 group-hover:scale-105 transition-transform">
-              <Zap className="w-5 h-5 text-white fill-current" />
-            </div>
-            <span className="text-xl font-black tracking-tighter uppercase italic dark:text-white">
-              Merchant<span className="text-brand-orange">Pro</span>
-            </span>
-          </div>
+    {/* Logo / Home Anchor */}
+    <div className="flex items-center gap-2 md:gap-3 cursor-pointer group" onClick={() => scrollToSection('top')}>
+      <div className="bg-brand-orange p-2 rounded-xl shadow-lg shadow-brand-orange/20 group-hover:scale-105 transition-transform">
+        <Zap className="w-5 h-5 text-zinc-950 fill-current" />
+      </div>
+      <span className="text-xl font-black tracking-tighter uppercase italic dark:text-white">
+        Merchant<span className="text-brand-orange">Pro</span>
+      </span>
+    </div>
 
-          <div className="hidden lg:flex items-center gap-8">
-            <button onClick={() => scrollToSection('how-it-works')} className="text-xs font-black uppercase tracking-widest text-content-muted dark:text-content-mutedDark hover:text-brand-orange transition-colors">How it Works</button>
-            <button onClick={() => scrollToSection('features')} className="text-xs font-black uppercase tracking-widest text-content-muted dark:text-content-mutedDark hover:text-brand-orange transition-colors">Features</button>
-            <button onClick={() => scrollToSection('pricing')} className="text-xs font-black uppercase tracking-widest text-content-muted dark:text-content-mutedDark hover:text-brand-orange transition-colors">Start Free</button>
-          </div>
+    {/* Desktop Section Links */}
+    <div className="hidden lg:flex items-center gap-8">
+      <button onClick={() => scrollToSection('how-it-works')} className="text-xs font-black uppercase tracking-widest text-zinc-500 hover:text-brand-orange transition-colors">How it Works</button>
+      <button onClick={() => scrollToSection('features')} className="text-xs font-black uppercase tracking-widest text-zinc-500 hover:text-brand-orange transition-colors">Features</button>
+      <button onClick={() => scrollToSection('pricing')} className="text-xs font-black uppercase tracking-widest text-zinc-500 hover:text-brand-orange transition-colors">Pricing</button>
+      
+      <button onClick={() => navigate('/book-consultation')} className="text-xs font-black uppercase tracking-widest text-zinc-500 hover:text-brand-orange transition-colors">Contact Us</button>
+    </div>
 
-          <div className="flex items-center gap-4">
-            <ThemeToggle />
-            {   /*   <button
-              onClick={() => navigate('/login')}
-              className="hidden md:block text-xs font-black uppercase tracking-[0.2em] text-content-muted hover:text-brand-orange transition-colors"
-            >
-              Login
-            </button>
- */}
-            {/* HCI: Main CTA explicitly states "Free Trial" */}
-            <button
-              onClick={() => navigate('/login')}
-              className="h-10 px-5 md:px-6 bg-brand-orange text-white rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-brand-orange/20 hover:scale-105 active:scale-95 transition-all"
-            >
-              Demo Trial
-            </button>
-          </div>
-        </div>
-      </nav>
+    {/* Actions */}
+    <div className="flex items-center gap-4">
+      <ThemeToggle />
+      {/*
+      <button
+        onClick={() => navigate('/login')}
+        className="hidden md:block text-xs font-black uppercase tracking-[0.2em] text-zinc-500 hover:text-zinc-950 dark:hover:text-white transition-colors"
+      >
+        Login
+      </button>
+      <button
+        onClick={() => navigate('/register')}
+        className="h-10 px-5 md:px-6 bg-brand-orange text-zinc-950 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-brand-orange/20 hover:scale-105 active:scale-95 transition-all"
+      >
+        Create Account
+      </button>
+      */}
+    </div>
+  </div>
+</nav>
 
-      {/* --- 2. THE HERO: FREE TRIAL FOCUS --- */}
-
-
+      {/* --- 2. THE HERO: WHAT IS THIS? --- */}
+      {/* HCI Principle: Value Proposition must be instantly readable without jargon. */}
+      {/* --- THE HERO: WHAT IS THIS? --- */}
       <section id="top" className="relative min-h-[100svh] flex flex-col justify-center pt-20 pb-12 px-4 md:px-6 overflow-hidden">
+        {/* Tightened the space-y gap slightly so it fits perfectly on smaller screens */}
         <div className="max-w-5xl mx-auto text-center space-y-6 relative z-10">
 
-
-          {/* HCI: Badge explicitly advertises the trial to remove immediate friction */}
-          <div className="relative group max-w-2xl mx-auto mb-12">
-            {/* Glow Effect behind the banner */}
-
-            <div className="absolute -inset-1 bg-gradient-to-r from-brand-orange to-brand-orangeHover rounded-[2rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-
-
-            {/* Animated Shimmer Background */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-[shimmer_3s_infinite] pointer-events-none" />
-            {saleConfig && (
-              // DYNAMIC COUNTDOWN PILL
-              <div className="relative group max-w-2xl mx-auto mb-16 animate-in fade-in zoom-in duration-1000">
-                {/* Subtle Glow Background */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-brand-orange to-brand-orangeHover rounded-[2rem] blur opacity-20 group-hover:opacity-40 transition duration-700"></div>
-
-                <div className="relative flex flex-col sm:flex-row items-center justify-between gap-6 px-8 py-5 rounded-[2.2rem] bg-brand-orange text-white shadow-2xl overflow-hidden border border-white/10">
-
-                  {/* Animated Shimmer Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-[shimmer_4s_infinite] pointer-events-none" />
-
-                  <div className="flex items-center gap-4 z-10">
-                    <div className="p-2.5 bg-white/20 rounded-2xl">
-                      <Gift className="w-5 h-5 animate-bounce" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/80 leading-none">
-                        {saleConfig.label || 'Flash Sale'}
-                      </span>
-                      <span className="text-lg font-black uppercase tracking-tighter mt-1">
-                        {saleConfig.discountPercent}% Off All Tiers
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* THE TIMER PILL */}
-                  <div className="flex items-center gap-3 bg-brand-black/20 backdrop-blur-xl px-5 py-2.5 rounded-2xl border border-white/10 z-10">
-                    <Clock className="w-4 h-4 text-white/70" />
-                    <div className="flex gap-1.5 font-mono font-black text-sm tracking-tighter">
-                      <div className="flex flex-col items-center">
-                        <span>{timeLeft.days}D</span>
-                      </div>
-                      <span className="text-white/30">:</span>
-                      <div className="flex flex-col items-center">
-                        <span>{timeLeft.hours.toString().padStart(2, '0')}H</span>
-                      </div>
-                      <span className="text-white/30">:</span>
-                      <div className="flex flex-col items-center">
-                        <span>{timeLeft.minutes.toString().padStart(2, '0')}M</span>
-                      </div>
-                      <span className="text-white/30">:</span>
-                      <div className="flex flex-col items-center">
-                        <span className="text-brand-orangeLight animate-pulse">
-                          {timeLeft.seconds.toString().padStart(2, '0')}S
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) || null}
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-100 dark:bg-brand-orange/10 text-brand-orange border border-brand-orange/20 animate-in fade-in zoom-in duration-700">
+            <Zap className="w-4 h-4 fill-current" />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em]">
+              The Modern M-Pesa Checkout
+            </span>
           </div>
-
 
           <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tighter uppercase italic leading-[0.9] text-zinc-950 dark:text-white animate-in slide-in-from-bottom-12 duration-1000">
             Accept M-Pesa.<br />
             <span className="text-brand-orange">Zero Friction.</span>
           </h1>
 
-          <p className="max-w-2xl mx-auto text-content-muted dark:text-content-mutedDark font-bold text-sm md:text-xl animate-in fade-in duration-1000 delay-300 px-4">
-            Turn your phone into a smart payment terminal. Experience the full power of MerchantPro risk-free. No commitment required.
+          <p className="max-w-2xl mx-auto text-zinc-600 dark:text-zinc-400 font-bold text-sm md:text-xl animate-in fade-in duration-1000 delay-300 px-4">
+            Turn your phone or tablet into a smart payment terminal. Generate dynamic QR codes that open M-Pesa instantly for your customers.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 md:pt-6 animate-in zoom-in-95 duration-1000 delay-500">
             <button
-              onClick={() => navigate('/register')}
-              className="w-full sm:w-auto h-14 md:h-16 px-8 md:px-12 bg-brand-orange text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-brand-orange/30 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3"
+              onClick={handleStartTrial}
+              className="w-full sm:w-auto h-14 md:h-16 px-8 md:px-12 bg-brand-orange text-zinc-950 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-brand-orange/30 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3"
             >
-              Start Your Free Trial <ArrowRight className="w-5 h-5" />
+              {isTrialActive ? 'Resume Trial' : 'Start Free Trial'} <ArrowRight className="w-5 h-5" />
             </button>
             <button
               onClick={() => scrollToSection('how-it-works')}
-              className="w-full sm:w-auto h-14 md:h-16 px-8 bg-brand-surface dark:bg-brand-gray text-content-main dark:text-content-mainDark border-2 border-brand-borderLight dark:border-brand-borderDark rounded-2xl font-black uppercase tracking-widest text-xs hover:border-brand-orange transition-all flex items-center justify-center"
+              className="w-full sm:w-auto h-14 md:h-16 px-8 bg-zinc-100 dark:bg-brand-black text-zinc-950 dark:text-white border-2 border-zinc-200 dark:border-zinc-800 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-zinc-200 dark:hover:bg-zinc-900 transition-all flex items-center justify-center"
             >
               See How It Works
             </button>
           </div>
-
-          <p className="text-[10px] font-bold text-content-muted uppercase tracking-widest animate-in fade-in duration-1000 delay-700 mt-4">
-            <ShieldCheck className="w-3 h-3 inline pb-0.5 mr-1" /> No M-Pesa deductions during trial
-          </p>
         </div>
       </section>
 
-
-      {/* --- 3. LEARNABILITY: HOW DOES IT WORK? (Unchanged, remains strong) --- */}
-      <section id="how-it-works" className="bg-brand-surface dark:bg-brand-gray border-y border-brand-borderLight dark:border-brand-borderDark py-20 md:py-32 px-4 md:px-6">
+      {/* --- 3. LEARNABILITY: HOW DOES IT WORK? --- */}
+      {/* HCI Principle: Build a mental model before asking them to sign up. */}
+      <section id="how-it-works" className="bg-zinc-50 dark:bg-brand-black border-y border-zinc-200 dark:border-zinc-800/50 py-20 md:py-32 px-4 md:px-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter text-zinc-950 dark:text-white">
               3 Steps to <span className="text-brand-orange">Get Paid</span>
             </h2>
-            <p className="text-content-muted mt-4 font-bold text-sm uppercase tracking-widest">No coding or extra hardware required.</p>
+            <p className="text-zinc-500 mt-4 font-bold text-sm uppercase tracking-widest">No coding or extra hardware required.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 relative">
-            <div className="hidden md:block absolute top-12 left-[15%] right-[15%] h-0.5 bg-gradient-to-r from-transparent via-brand-orange to-transparent opacity-30 z-0" />
+            {/* Connecting Line for Desktop */}
+            <div className="hidden md:block absolute top-12 left-[15%] right-[15%] h-0.5 bg-gradient-to-r from-zinc-200 via-brand-orange to-zinc-200 dark:from-zinc-800 dark:via-brand-orange dark:to-zinc-800 z-0" />
 
             {[
-              { step: '01', title: 'Link Your Till', desc: 'Enter your existing Safaricom Till or Paybill number securely.', icon: LinkIcon },
-              { step: '02', title: 'Generate QR', desc: 'Type in the amount owed. We instantly generate a unique QR code.', icon: QrCode },
-              { step: '03', title: 'Customer Scans', desc: 'The customer scans the code. The M-Pesa PIN prompt appears automatically.', icon: ScanFace }
+              {
+                step: '01', title: 'Link Your Till',
+                desc: 'Enter your existing Safaricom Till or Paybill number securely into your dashboard.',
+                icon: LinkIcon
+              },
+              {
+                step: '02', title: 'Generate QR',
+                desc: 'Type in the amount owed. We instantly generate a unique QR code for that exact transaction.',
+                icon: QrCode
+              },
+              {
+                step: '03', title: 'Customer Scans',
+                desc: 'The customer scans the code with their phone camera. The M-Pesa PIN prompt appears automatically.',
+                icon: ScanFace
+              }
             ].map((item, idx) => (
               <div key={idx} className="relative z-10 flex flex-col items-center text-center group">
-                <div className="w-24 h-24 rounded-full bg-brand-light dark:bg-brand-black border-4 border-brand-surface dark:border-brand-gray shadow-xl flex items-center justify-center mb-6 group-hover:border-brand-orange transition-colors duration-500">
+                <div className="w-24 h-24 rounded-full bg-white dark:bg-zinc-900 border-4 border-zinc-50 dark:border-brand-black shadow-xl flex items-center justify-center mb-6 group-hover:border-brand-orange transition-colors duration-500">
                   <item.icon className="w-10 h-10 text-brand-orange" />
                 </div>
                 <Badge variant="secondary" className="mb-4 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">STEP {item.step}</Badge>
                 <h3 className="text-xl font-black uppercase italic text-zinc-950 dark:text-white mb-3">{item.title}</h3>
-                <p className="text-content-muted dark:text-content-mutedDark text-sm font-medium leading-relaxed max-w-[250px]">
+                <p className="text-zinc-500 dark:text-zinc-400 text-sm font-medium leading-relaxed max-w-[250px]">
                   {item.desc}
                 </p>
               </div>
@@ -271,256 +212,249 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* --- 4. FEATURES --- */}
+      {/* --- 4. FEATURES (Retained Bento Box style but clearer copy) --- */}
       <section id="features" className="max-w-7xl mx-auto px-4 md:px-6 py-20 md:py-32">
         <div className="mb-12 text-center md:text-left">
           <h2 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter text-zinc-950 dark:text-white">
-            Included in your <span className="text-brand-orange">Trial</span>
+            Powerful <span className="text-brand-orange">Features</span>
           </h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-          <div className="md:col-span-2 bg-brand-orange text-white shadow-2xl relative overflow-hidden rounded-[2rem] p-8 md:p-12 group">
+
+          <div className="md:col-span-2 bg-brand-orange text-zinc-950 shadow-2xl relative overflow-hidden rounded-[2rem] p-8 md:p-12 group">
             <div className="relative z-10">
               <h3 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter leading-[0.9] mb-4">
                 Dynamic QR <br /> Generation
               </h3>
-              <p className="max-w-md font-bold text-sm leading-relaxed mb-8 opacity-90">
+              <p className="max-w-md font-bold text-sm leading-relaxed mb-8 opacity-80">
                 Stop telling customers your Till number and the amount. Our system embeds the price directly into the QR code. They scan, enter PIN, and you're done.
               </p>
             </div>
-            <QrCode className="absolute -right-8 -bottom-8 h-64 w-64 text-black/10 -rotate-12 group-hover:rotate-0 transition-all duration-1000" />
+            <QrCode className="absolute -right-8 -bottom-8 h-64 w-64 text-zinc-950/10 -rotate-12 group-hover:rotate-0 transition-all duration-1000" />
           </div>
 
-          <div className="bg-brand-black border border-brand-borderDark text-white relative overflow-hidden rounded-[2rem] p-8 md:p-12 group">
+          <div className="bg-zinc-950 border border-zinc-800 text-white relative overflow-hidden rounded-[2rem] p-8 md:p-12 group">
             <div className="relative z-10">
-              <div className="bg-brand-gray w-12 h-12 rounded-xl flex items-center justify-center mb-6">
+              <div className="bg-zinc-800 w-12 h-12 rounded-xl flex items-center justify-center mb-6">
                 <BarChart3 className="w-6 h-6 text-brand-orange" />
               </div>
               <h3 className="text-3xl font-black uppercase italic tracking-tighter leading-none mb-4">
                 Live<br />Analytics.
               </h3>
-              <p className="text-content-mutedDark font-medium text-sm">
-                Track revenue, view success rates, and monitor all your transactions in real-time.
+              <p className="text-zinc-400 font-medium text-sm">
+                Track revenue, view success rates, and monitor all your transactions in real-time from any device.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* --- 5. REDEFINED PRICING: "PRO" TRIAL FOCUSED --- */}
-      {/* --- 5. REDEFINED PRICING: TRIAL FOCUSED --- */}
-      <section id="pricing" className="bg-brand-surface dark:bg-brand-gray border-y border-brand-borderLight dark:border-brand-borderDark py-20 md:py-32 px-4 md:px-6">
+      {/* --- 5. PRICING --- */}
+      <section id="pricing" className="bg-zinc-50 dark:bg-brand-black/40 border-y border-zinc-200 dark:border-brand-gray/50 py-20 md:py-32 px-4 md:px-6">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-16 text-center">
-            <h2 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter text-zinc-950 dark:text-white leading-[0.9]">
-              Nairobi’s Fastest <span className="text-brand-orange">M-Pesa</span> Engine.
+          <div className="mb-12 text-center">
+            <h2 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter text-zinc-950 dark:text-white">
+              Transparent <span className="text-brand-orange">Pricing</span>
             </h2>
-            <p className="text-content-muted font-bold uppercase tracking-widest mt-4 text-xs">
-              Secure your specialized merchant setup. No automated bots—just direct expert support.
-            </p>
+            <p className="text-zinc-500 font-bold uppercase tracking-widest mt-4 text-xs">Start free. Upgrade when you need more power.</p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 items-start">
+            {/* STARTER */}
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] p-8 md:p-10 relative hover:border-brand-orange/50 transition-colors">
+              <h3 className="text-3xl font-black uppercase italic tracking-tighter text-zinc-950 dark:text-white mb-2">Starter</h3>
+              <p className="text-zinc-500 font-bold text-xs uppercase tracking-wide mb-6">1 Hour Free Trial ($10 per month)</p>
 
-            {/* TIER 1: STARTER CORE */}
-            <div className="bg-brand-surface dark:bg-brand-gray border border-brand-borderLight dark:border-brand-borderDark rounded-[2.5rem] p-8 flex flex-col justify-between transition-all hover:border-brand-orange/30">
-              <div>
-                <h3 className="text-2xl font-black uppercase italic tracking-tighter text-content-main dark:text-content-mainDark mb-1">Starter Core</h3>
-                <p className="text-[10px] font-black text-brand-orange uppercase tracking-widest mb-6">Essential Transaction Tools</p>
-
-                <div className="flex flex-col mb-8">
-                  {saleConfig && <span className="text-[10px] font-bold text-content-muted line-through tracking-widest opacity-60">$10.00</span>}
-                  <div className="flex items-end gap-1">
-                    <span className="text-4xl font-black italic tracking-tighter text-content-main dark:text-content-mainDark">${getPrice(10)}</span>
-                    <span className="text-[10px] font-bold text-content-muted uppercase tracking-widest mb-1.5">/ month</span>
+              <div className="space-y-4 mb-10">
+                {['Unlimited QR Generation', 'Instant STK Pushes', 'Basic Digital Receipts'].map((feat, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <Check className="w-4 h-4 text-brand-orange" />
+                    <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">{feat}</span>
                   </div>
-                </div>
-
-                <div className="space-y-4 mb-10">
-                  {[
-                    'Unlimited Dynamic QR Generation',
-                    'High-Speed M-Pesa STK Push',
-                    'Basic Revenue Statistics',
-                    'Digital Receipting'
-                  ].map((feat, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <div className="bg-brand-orange/10 p-1 rounded-full shrink-0">
-                        <Check className="w-3 h-3 text-brand-orange" />
-                      </div>
-                      <span className="text-xs font-bold text-content-main dark:text-content-mainDark uppercase tracking-tight">{feat}</span>
-                    </div>
-                  ))}
-                </div>
+                ))}
               </div>
-              <button
-                onClick={() => setShowBookConsultation(true)}
-                className="w-full h-12 rounded-xl text-[10px] font-black uppercase tracking-widest border border-brand-borderLight dark:border-brand-borderDark text-content-main dark:text-content-mainDark hover:bg-brand-light dark:hover:bg-brand-black transition-colors"
-              >
-                Book Setup for Core
+              <button onClick={handleStartTrial} className="w-full h-14 bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white rounded-xl font-black uppercase tracking-widest text-xs hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
+                {isTrialActive ? 'Resume Trial' : 'Start Trial'}
               </button>
             </div>
 
-            {/* TIER 2: MERCHANT PRO (THE STRICT FEATURE SET) */}
-            <div className="bg-brand-orange text-white rounded-[2.5rem] p-10 relative shadow-2xl shadow-brand-orange/30 border-2 border-brand-orange flex flex-col justify-between overflow-hidden lg:-translate-y-4">
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_3s_infinite] pointer-events-none" />
-              <div className="absolute -top-1 left-1/2 -translate-x-1/2 bg-brand-buttonBase text-white px-5 py-1.5 rounded-full text-[8px] font-black uppercase tracking-[0.3em] shadow-xl z-10 whitespace-nowrap">
-                The Full Intelligence Suite
+            {/* PRO */}
+            <div className="bg-brand-orange text-zinc-950 rounded-[2rem] p-8 md:p-10 relative transform md:-translate-y-4 shadow-2xl shadow-brand-orange/20">
+              <div className="absolute top-0 right-0 bg-zinc-950 text-white px-4 py-1 rounded-bl-xl rounded-tr-[2rem] text-[10px] font-black uppercase tracking-widest">
+                Most Popular
               </div>
+              <h3 className="text-3xl font-black uppercase italic tracking-tighter mb-2">Pro</h3>
+              <p className="text-zinc-800 font-bold text-xs uppercase tracking-wide mb-6">$50 / month</p>
 
-              <div>
-                <h3 className="text-3xl font-black uppercase italic tracking-tighter mb-1">Merchant Pro</h3>
-                <p className="text-white/80 font-black text-[10px] uppercase tracking-widest mb-6">Built for Scaling Giants</p>
-
-                <div className="flex flex-col mb-8">
-                  {saleConfig && <span className="text-[10px] font-bold text-white/40 line-through tracking-widest">$25.00</span>}
-                  <div className="flex items-end gap-1">
-                    <span className="text-5xl font-black italic tracking-tighter text-white">${getPrice(50)}</span>
-                    <span className="text-[10px] font-bold text-white/70 uppercase tracking-widest mb-2">/ month</span>
+              <div className="space-y-4 mb-10">
+                {['Everything in Starter', 'AI Revenue Analytics', 'Transaction Export (CSV)', 'Priority Support'].map((feat, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <Check className="w-4 h-4 text-zinc-950" />
+                    <span className="text-sm font-bold text-zinc-900">{feat}</span>
                   </div>
-                </div>
-
-                <div className="space-y-5 mb-10">
-                  {[
-                    { label: 'AI Power Forecasting', sub: 'Real-time revenue projections' },
-                    { label: 'Graphical Trend Evaluation', sub: 'Visual business health metrics' },
-                    { label: 'Priority Network Routing', sub: 'Ultra-low latency STK delivery' },
-                    { label: 'Professional Audit Reports', sub: 'Advanced CSV & PDF data exports' }
-                  ].map((feat, i) => (
-                    <div key={i} className="flex items-start gap-3">
-                      <div className="bg-white/20 p-1.5 rounded-full shrink-0 mt-0.5">
-                        <Zap className="w-3.5 h-3.5 text-white fill-current" />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-xs font-black uppercase tracking-tight leading-none">{feat.label}</span>
-                        <span className="text-[9px] font-bold text-white/60 uppercase tracking-wide mt-1">{feat.sub}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                ))}
               </div>
-              <button
-                onClick={() => setShowBookConsultation(true)}
-                className="w-full h-14 bg-white text-brand-orange rounded-xl font-black uppercase tracking-widest text-xs hover:scale-[1.02] active:scale-95 transition-transform shadow-xl"
-              >
-                Book Pro Consultation
+              <button onClick={() => navigate('/book-consultation')} className="w-full h-14 bg-zinc-950 text-white rounded-xl font-black uppercase tracking-widest text-xs hover:scale-105 transition-transform shadow-lg shadow-black/20">
+                Upgrade to Pro
               </button>
             </div>
 
-            {/* THE ADD-ON: MENU POWER-UP */}
-            <div className="bg-brand-surface dark:bg-brand-gray border-2 border-dashed border-brand-orange/30 rounded-[2.5rem] p-8 flex flex-col justify-between relative group">
-              <div className="absolute top-6 right-8 bg-brand-orange/10 text-brand-orange px-3 py-1 rounded-full text-[7px] font-black uppercase tracking-widest border border-brand-orange/20">
-                ADD-ON FEATURE: PLAN REQUIRED
-              </div>
+            {/* ADD ON */}
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] p-8 md:p-10 relative hover:border-zinc-400 transition-colors">
+              <h3 className="text-3xl font-black uppercase italic tracking-tighter text-zinc-950 dark:text-white mb-2">Menu Add-on</h3>
+              <p className="text-zinc-500 font-bold text-xs uppercase tracking-wide mb-6">+$10 / month</p>
 
-              <div>
-                <div className="w-14 h-14 bg-brand-orange/10 rounded-2xl flex items-center justify-center mb-6">
-                  <Utensils className="w-7 h-7 text-brand-orange" />
-                </div>
-                <h3 className="text-2xl font-black uppercase italic tracking-tighter text-content-main dark:text-content-mainDark mb-1 leading-none">
-                  Interactive <br /> Menu Add-on
-                </h3>
-                <p className="text-[9px] font-black text-content-muted dark:text-content-mutedDark uppercase tracking-widest mt-2 leading-relaxed">
-                  Transform your dining experience with digital self-checkout.
-                </p>
-
-                <div className="mt-8 p-4 rounded-2xl bg-brand-light dark:bg-brand-black border border-brand-borderLight dark:border-brand-borderDark">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-black italic text-brand-orange">+$10.00</span>
-                    <span className="text-[9px] font-bold text-content-muted uppercase tracking-widest">/ month</span>
+              <div className="space-y-4 mb-10">
+                {['Digital QR Menus', 'Inventory Tracking', 'Direct Menu Ordering'].map((feat, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <Plus className="w-4 h-4 text-zinc-400" />
+                    <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">{feat}</span>
                   </div>
-                  <p className="text-[8px] font-bold text-content-muted uppercase tracking-tight mt-1 italic">Applied to your base monthly bill</p>
-                </div>
-
-                <div className="mt-8 space-y-4">
-                  {[
-                    'QR Table Category Browsing',
-                    'High-Res Dish Visualizers',
-                    'Instant Order-to-Payment Sync',
-                    'Self-Service Checkout'
-                  ].map((feat, i) => (
-                    <div key={i} className="flex items-center gap-3 opacity-80">
-                      <Plus className="w-3 h-3 text-brand-orange" />
-                      <span className="text-[10px] font-bold text-content-main dark:text-content-mainDark uppercase tracking-tight">{feat}</span>
-                    </div>
-                  ))}
-                </div>
+                ))}
               </div>
-
-              <button
-                onClick={() => setShowBookConsultation(true)}
-                className="w-full h-12 mt-8 rounded-xl text-[9px] font-black uppercase tracking-widest bg-brand-light dark:bg-brand-black text-brand-orange border border-brand-orange/20 hover:bg-brand-orange hover:text-white transition-all"
-              >
-                Book Menu Setup Demo
-              </button>
             </div>
           </div>
         </div>
       </section>
-      {showBookConsultation && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in zoom-in-95 duration-300">
-          <div className="relative w-full max-w-md">
-            <button
-              onClick={() => setShowBookConsultation(false)}
-              className="absolute top-4 right-4 z-50 p-2 bg-brand-light/50 dark:bg-brand-black/50 hover:bg-brand-light dark:hover:bg-brand-black rounded-full transition-colors"
-            >
-              <X className="w-5 h-5 text-content-main dark:text-content-mainDark" />
-            </button>
-            <BookConsultation />
-          </div>
-        </div>
-      )}
 
-      {/* --- FOOTER --- */}
-      <footer className="max-w-7xl mx-auto px-6 py-12 md:py-16">
+      {/* --- FOOTER (Same logic, slightly cleaner layout) --- */}
+      <footer className="max-w-7xl mx-auto px-6 py-12 md:py-16 border-t border-zinc-200 dark:border-brand-gray/50">
         <div className="flex flex-col md:flex-row justify-between items-center md:items-end gap-10">
+
+          {/* --- LEFT SIDE: Brand & Copyright (Grouped for Proximity) --- */}
           <div className="flex flex-col items-center md:items-start gap-4">
+            {/* Brand Logo */}
             <div className="text-2xl font-black tracking-tighter text-zinc-950 dark:text-white uppercase italic leading-none">
               Merchant<span className="text-brand-orange">Pro</span>
             </div>
-            <p className="text-center md:text-left text-[10px] font-bold uppercase tracking-widest text-content-muted leading-relaxed">
+
+            {/* Copyright Data */}
+            <p className="text-center md:text-left text-[10px] font-bold uppercase tracking-widest text-zinc-500 leading-relaxed">
               © 2026 • Cloudora Ltd. All rights reserved. <br className="hidden md:block" />
               Designed in Nairobi. Powered by M-Pesa.
             </p>
           </div>
 
-          <div className="flex flex-col items-center md:items-end gap-2 text-center md:text-right">
-            {/* Section Label */}
-            <p className="text-[10px] font-black uppercase tracking-widest text-content-muted dark:text-content-mutedDark mb-1">
-              Support & Contact
+          {/* --- RIGHT SIDE: Actionable Contact Info --- */}
+          <div className="flex flex-col items-center md:items-end gap-1.5 text-center md:text-right">
+            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
+              Support
             </p>
-
-            {/* Primary Action: Phone */}
             <a
-              href="tel:+254759585197"
-              className="text-base font-black tracking-widest text-brand-orange hover:text-brand-orangeHover transition-colors"
+              href="mailto:mpesaqr@cloudora.live"
+              className="text-sm md:text-base font-black uppercase tracking-wider text-zinc-950 dark:text-white hover:text-brand-orange dark:hover:text-brand-orange transition-colors"
             >
-              +254 759 585 197
-            </a>
+              mpesaqr@cloudora.live
 
-            {/* Secondary Actions: Emails Stacked */}
-            <div className="flex flex-col gap-1.5 items-center md:items-end mt-1">
+            </a>
               <a
-                href="mailto:mpesaqr@cloudora.live"
-                className="text-xs font-bold tracking-wider text-content-main dark:text-content-mainDark hover:text-brand-orange transition-colors"
-              >
-                mpesaqr@cloudora.live
-              </a>
+              href="mailto:contact@cloudora.live"
+              className="text-sm md:text-base font-black uppercase tracking-wider text-zinc-950 dark:text-white hover:text-brand-orange dark:hover:text-brand-orange transition-colors"
+            >
+        contact@cloudora.live
+              
+            </a>
+            
               <a
-                href="mailto:support@cloudoraltd.live"
-                className="text-xs font-bold tracking-wider text-content-main dark:text-content-mainDark hover:text-brand-orange transition-colors"
-              >
-                support@cloudoraltd.live
-              </a>
-              <a
-                href="mailto:contact@cloudoraltd.live"
-                className="text-xs font-bold tracking-wider text-content-main dark:text-content-mainDark hover:text-brand-orange transition-colors"
-              >
-                contact@cloudoraltd.live
-              </a>
-            </div>
+              href="mailto:support@cloudora.live"
+              className="text-sm md:text-base font-black uppercase tracking-wider text-zinc-950 dark:text-white hover:text-brand-orange dark:hover:text-brand-orange transition-colors"
+            >
+        support@cloudora.live
+              
+            </a>
           </div>
+
         </div>
       </footer>
+
+      {showPricingModal && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) closePricingModal();
+          }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="pricing-dialog-title"
+            className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 p-5 sm:p-8 shadow-2xl"
+          >
+            <button
+              type="button"
+              onClick={closePricingModal}
+              aria-label="Close pricing options"
+              className="absolute right-4 top-4 z-10 rounded-full p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-950 dark:hover:bg-zinc-800 dark:hover:text-white transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="mb-7 pr-10">
+              <p className="text-xs font-black uppercase tracking-widest text-brand-orange">MerchantPro plans</p>
+              <h2 id="pricing-dialog-title" className="mt-2 text-2xl sm:text-3xl font-black uppercase italic tracking-tight text-zinc-950 dark:text-white">
+                Choose your plan
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-5">
+                <h3 className="text-lg font-black uppercase text-zinc-950 dark:text-white">Starter</h3>
+                <p className="mt-1 text-sm font-bold text-zinc-500">$10 / month</p>
+                <ul className="mt-5 space-y-2 text-sm text-zinc-600 dark:text-zinc-300">
+                  <li>Unlimited QR generation</li>
+                  <li>Instant STK pushes</li>
+                  <li>Basic digital receipts</li>
+                </ul>
+                <button
+                  onClick={() => { closePricingModal(); handleStartTrial(); }}
+                  className="mt-6 h-11 w-full rounded-lg bg-zinc-100 dark:bg-zinc-800 text-xs font-black uppercase tracking-widest text-zinc-950 dark:text-white hover:bg-zinc-200 dark:hover:bg-zinc-700"
+                >
+                  {isTrialActive ? 'Resume Trial' : 'Start Free Trial'}
+                </button>
+              </div>
+
+              <div className="rounded-xl border-2 border-brand-orange bg-orange-50 dark:bg-brand-orange/10 p-5">
+                <h3 className="text-lg font-black uppercase text-zinc-950 dark:text-white">Pro</h3>
+                <p className="mt-1 text-sm font-bold text-zinc-600 dark:text-zinc-300">$50 / month</p>
+                <ul className="mt-5 space-y-2 text-sm text-zinc-700 dark:text-zinc-200">
+                  <li>Everything in Starter</li>
+                  <li>AI revenue analytics</li>
+                  <li>Transaction export</li>
+                  <li>Priority support</li>
+                </ul>
+                <button
+                  onClick={() => navigate('/book-consultation')}
+                  className="mt-6 h-11 w-full rounded-lg bg-zinc-950 text-xs font-black uppercase tracking-widest text-white hover:bg-zinc-800"
+                >
+                  Upgrade to Pro
+                </button>
+              </div>
+
+              <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-5">
+                <h3 className="text-lg font-black uppercase text-zinc-950 dark:text-white">Menu Add-on</h3>
+                <p className="mt-1 text-sm font-bold text-zinc-500">+$10 / month</p>
+                <ul className="mt-5 space-y-2 text-sm text-zinc-600 dark:text-zinc-300">
+                  <li>Digital QR menus</li>
+                  <li>Inventory tracking</li>
+                  <li>Direct menu ordering</li>
+                </ul>
+                <button
+                  onClick={() => navigate('/book-consultation')}
+                  className="mt-6 h-11 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 text-xs font-black uppercase tracking-widest text-zinc-800 dark:text-zinc-100 hover:border-brand-orange"
+                >
+                  Contact Us
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {/* TRIAL OVER MODAL */}
+      <TrialOverModal
+        isOpen={showTrialOverModal}
+        onClose={() => setShowTrialOverModal(false)}
+      />
     </div>
   );
 };

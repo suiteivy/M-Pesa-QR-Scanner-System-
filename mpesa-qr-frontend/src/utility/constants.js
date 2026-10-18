@@ -4,7 +4,7 @@
 // We check for the variable you actually set (REACT_APP_API_URL)
 // If that fails, we fallback to the IP you provided: https://merchantpro.cloudora.live
 const ENV_URL = process.env.REACT_APP_API_URL || process.env.REACT_APP_BACKEND_URL;
-const FALLBACK_URL = "https://merchantpro.cloudora.live";
+const FALLBACK_URL = "https://prdmps.cloudora.live";
 const FRONTEND_URL = process.env.REACT_APP_FRONTEND_URL
 
 // Remove trailing slashes to prevent double slash errors (e.g. //api)

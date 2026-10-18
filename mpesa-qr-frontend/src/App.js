@@ -1,7 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-// ... imports
-import { AuthProvider, useAuth } from './hooks/useAuth'; // Import useAuth here
+import { AuthProvider, useAuth } from './hooks/useAuth';
 
 // Components
 import Login from './components/Login';
@@ -14,15 +13,17 @@ import QRPaymentScanner from './components/QRPaymentScanner';
 import PayPrompt from "./components/PayPrompt";
 import PublicMenuPage from './components/PublicMenuPage';
 import LandingPage from './components/LandingPage';
+import BookConsultation from './components/BookConsultation';
+import TrialDashboard from './components/TrialDashboard';
 
 // Utilities
 import PrivateRoute from './utility/PrivateRoute';
 import { SubscriptionProvider } from './hooks/SubscriptionProvider';
-import { ThemeProvider } from './hooks/ThemeContext'; // Assuming you have this
+import { FreeTrialProvider } from './hooks/FreeTrialContext';
 
-// --- 1. NEW COMPONENT: HANDLES ROUTING LOGIC ---
+// --- ROUTING COMPONENT ---
 const AppRoutes = () => {
-  const { user, loading } = useAuth(); // Now we can use the hook!
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
@@ -34,33 +35,39 @@ const AppRoutes = () => {
 
   return (
     <Routes>
-      {/* 1. Landing Page Redirect */}
-      <Route 
-        path="/" 
-        element={user ? <Navigate to="/dashboard" replace /> : <LandingPage />} 
+      {/* Landing Page */}
+      <Route
+        path="/"
+        element={user ? <Navigate to="/dashboard" replace /> : <LandingPage />}
       />
+      <Route path="/landing" element={<LandingPage />} />
 
-      {/* 2. Auth Routes (Redirect if already logged in) */}
+      {/* Auth Routes (redirect to dashboard if already signed in) */}
       <Route
         path="/login"
         element={user ? <Navigate to="/dashboard" replace /> : <Login />}
       />
-      <Route 
-        path="/register" 
-        element={user ? <Navigate to="/dashboard" replace /> : <Register />} 
+      <Route
+        path="/register"
+        element={user ? <Navigate to="/dashboard" replace /> : <Register />}
       />
+
+      {/* Free trial: accessible without any login or account */}
+      <Route path="/trial" element={<TrialDashboard />} />
 
       {/* Public Routes */}
       <Route path="/scan" element={<PublicQRScanner />} />
       <Route path="/pay" element={<PayPrompt />} />
       <Route path="/public/menu/:merchantId" element={<PublicMenuPage />} />
+      <Route path="/book-consultation" element={<BookConsultation />} />
+      <Route path="/contact-us" element={<BookConsultation />} />
 
-      {/* Protected Routes Group */}
+      {/* Protected Routes */}
       <Route element={<PrivateRoute />}>
         <Route path="/dashboard" element={<MerchantDashboard />} />
         <Route path="/generate-qr" element={<MerchantQRGenerator />} />
         <Route path="/transactions" element={<Transactions />} />
-        <Route path="/payment-scanner" element={<QRPaymentScanner />} />
+        <Route path="/payment-scanner" element={<PublicQRScanner />} />
       </Route>
 
       {/* Fallback */}
@@ -69,17 +76,17 @@ const AppRoutes = () => {
   );
 };
 
-// --- 2. MAIN APP COMPONENT: WRAPS PROVIDERS ONLY ---
+// --- MAIN APP COMPONENT ---
 function App() {
   return (
     <AuthProvider>
-      <SubscriptionProvider>
-        <ThemeProvider> {/* Add ThemeProvider here if you use it */}
-           <div className="App">
-             <AppRoutes />
-           </div>
-        </ThemeProvider>
-      </SubscriptionProvider>
+      <FreeTrialProvider>
+        <SubscriptionProvider>
+          <div className="App">
+            <AppRoutes />
+          </div>
+        </SubscriptionProvider>
+      </FreeTrialProvider>
     </AuthProvider>
   );
 }

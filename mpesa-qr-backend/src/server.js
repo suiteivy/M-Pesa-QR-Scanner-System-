@@ -42,7 +42,14 @@ app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
   console.log('Headers:', req.headers);
   if (req.body && Object.keys(req.body).length > 0) {
-    console.log('Body:', req.body);
+    if (req.path === '/api/menu/save') {
+      console.log('Menu save:', {
+        merchantId: req.body.merchantId,
+        itemCount: Array.isArray(req.body.items) ? req.body.items.length : 0,
+      });
+    } else {
+      console.log('Body:', req.body);
+    }
   }
   next();
 });

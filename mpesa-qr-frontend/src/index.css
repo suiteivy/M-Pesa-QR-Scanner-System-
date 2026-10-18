@@ -62,3 +62,140 @@
 .scan-success {
   animation: scanSuccess 0.3s ease-in-out;
 }
+
+.trial-upgrade-ribbon {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.trial-upgrade-ribbon__band {
+  position: absolute;
+  top: 50%;
+  left: -35%;
+  width: 170%;
+  height: 8px;
+  transform: rotate(28deg);
+  background: linear-gradient(180deg, #f0c7c8 0%, #c55060 24%, #8e1c2e 52%, #bc3549 78%, #f1b8bd 100%);
+  box-shadow: 0 1px 3px rgb(30 10 10 / 45%);
+}
+
+.trial-upgrade-ribbon__bow {
+  position: absolute;
+  inset: 0;
+}
+
+.trial-upgrade-ribbon__loop,
+.trial-upgrade-ribbon__tail,
+.trial-upgrade-ribbon__knot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  background: linear-gradient(135deg, #f0c7c8 0%, #bd4253 34%, #82192a 72%, #e49ba2 100%);
+  box-shadow: 0 1px 3px rgb(30 10 10 / 45%);
+}
+
+.trial-upgrade-ribbon__loop {
+  width: 14px;
+  height: 11px;
+  border: 1px solid rgb(255 235 235 / 65%);
+  border-radius: 80% 20% 80% 20%;
+}
+
+.trial-upgrade-ribbon__loop--left {
+  transform: translate(-95%, -55%) rotate(35deg);
+}
+
+.trial-upgrade-ribbon__loop--right {
+  transform: translate(-5%, -55%) rotate(-35deg) scaleX(-1);
+}
+
+.trial-upgrade-ribbon__knot {
+  width: 7px;
+  height: 7px;
+  border: 1px solid #f0c7c8;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.trial-upgrade-ribbon__tail {
+  width: 15px;
+  height: 7px;
+  clip-path: polygon(0 0, 100% 0, 78% 50%, 100% 100%, 0 100%);
+}
+
+.trial-upgrade-ribbon__tail--left {
+  transform: translate(-93%, 35%) rotate(22deg);
+}
+
+.trial-upgrade-ribbon__tail--right {
+  transform: translate(-7%, 35%) rotate(-22deg) scaleX(-1);
+}
+
+.trial-upgrade-ribbon.is-untying {
+  animation: trialRibbonFade 720ms ease-in forwards;
+}
+
+.trial-upgrade-ribbon.is-untying .trial-upgrade-ribbon__band {
+  animation: trialRibbonSlip 620ms ease-in forwards;
+}
+
+.trial-upgrade-ribbon.is-untying .trial-upgrade-ribbon__loop--left {
+  animation: trialBowLoopLeft 560ms ease-in forwards;
+}
+
+.trial-upgrade-ribbon.is-untying .trial-upgrade-ribbon__loop--right {
+  animation: trialBowLoopRight 560ms ease-in forwards;
+}
+
+.trial-upgrade-ribbon.is-untying .trial-upgrade-ribbon__tail--left {
+  animation: trialBowTailLeft 560ms ease-in forwards;
+}
+
+.trial-upgrade-ribbon.is-untying .trial-upgrade-ribbon__tail--right {
+  animation: trialBowTailRight 560ms ease-in forwards;
+}
+
+.trial-upgrade-ribbon.is-untying .trial-upgrade-ribbon__knot {
+  animation: trialBowKnot 320ms ease-in forwards;
+}
+
+@keyframes trialRibbonFade {
+  to { opacity: 0; }
+}
+
+@keyframes trialRibbonSlip {
+  to { transform: translate(12px, 24px) rotate(28deg); }
+}
+
+@keyframes trialBowLoopLeft {
+  to { transform: translate(-180%, -105%) rotate(-40deg) scale(0.55); opacity: 0; }
+}
+
+@keyframes trialBowLoopRight {
+  to { transform: translate(80%, -105%) rotate(40deg) scale(0.55); opacity: 0; }
+}
+
+@keyframes trialBowTailLeft {
+  to { transform: translate(-180%, 110%) rotate(58deg); opacity: 0; }
+}
+
+@keyframes trialBowTailRight {
+  to { transform: translate(80%, 110%) rotate(-58deg) scaleX(-1); opacity: 0; }
+}
+
+@keyframes trialBowKnot {
+  to { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trial-upgrade-ribbon.is-untying,
+  .trial-upgrade-ribbon.is-untying .trial-upgrade-ribbon__band,
+  .trial-upgrade-ribbon.is-untying .trial-upgrade-ribbon__loop,
+  .trial-upgrade-ribbon.is-untying .trial-upgrade-ribbon__tail,
+  .trial-upgrade-ribbon.is-untying .trial-upgrade-ribbon__knot {
+    animation-duration: 1ms;
+  }
+}

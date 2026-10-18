@@ -4,6 +4,7 @@
     "price": { "type": "number", "required": true, "min": 1 },
     "category": { "type": "string", "required": true },
     "description": { "type": "string", "required": false, "default": "" },
+    "imageUrl": { "type": "string", "required": false, "default": "" },
     "isAvailable": { "type": "boolean", "required": false, "default": true }
   }
 }
