@@ -35,14 +35,14 @@ const BookConsultation = ({ onClose }) => {
         `Hi MerchantPro Team,\n\nI would like to schedule a 1-on-1 consultation and demo of the platform.\n\nHere are my details:\n\n- Name: ${formData.name}\n- Contact Email: ${formData.email}\n- Requested Date: ${formattedDate}\n- Requested Time: ${formData.time}\n\nLooking forward to speaking with you!`
       );
 
-      const mailtoLink = `mailto:mpesaqr@cloudora.live?subject=${subject}&body=${body}`;
+      const mailtoLink = `mailto:mpesaqr@cloudora.africa?subject=${subject}&body=${body}`;
       window.location.href = mailtoLink;
 
       setStatus({ type: 'success', msg: 'Opening your email app...' });
     } catch (err) {
       setStatus({ 
         type: 'error', 
-        msg: 'Failed to open email client. Please email us directly at mpesaqr@cloudora.live' 
+        msg: 'Failed to open email client. Please email us directly at mpesaqr@cloudora.africa' 
       });
     } finally {
       setLoading(false);

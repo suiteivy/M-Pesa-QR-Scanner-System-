@@ -1,20 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { collection, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { API_BASE_URL } from '../utility/constants';
 import { db } from '../firebase';
 import MenuView from '../components/MenuView';
 import { DEMO_MENU_ITEMS } from '../utility/demoData';
+import TrialEndedModal from './TrialEndedModal';
 import {
-  Utensils, AlertCircle, X, Smartphone, Loader2, Info,
+  Utensils, AlertCircle, X, Smartphone, Loader2, Info, ArrowLeft, ShieldOff,
   Lock, ShoppingCart, Plus, Minus, Trash2, ChevronRight, CheckCircle2, Zap
 } from 'lucide-react';
 
 const PublicMenuPage = () => {
+  const navigate = useNavigate();
   const { merchantId } = useParams();
   const [searchParams] = useSearchParams();
   const isDemoMenu = searchParams.get('demo') === 'true';
   const isPreviewMenu = searchParams.get('preview') === 'true';
+  const [showEndTrialModal, setShowEndTrialModal] = useState(false);
   const demoItems = searchParams.get('items');
   const compactDemoItems = searchParams.get('m');
 
@@ -251,12 +254,33 @@ const PublicMenuPage = () => {
   );
 
   const isInteractive = true;
+  const isTrialPreview = isDemoMenu || isPreviewMenu || merchantId === 'demo-merchant';
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 pb-32 relative selection:bg-orange-600/30 font-sans transition-colors duration-300">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="bg-white dark:bg-zinc-900 px-6 py-12 shadow-sm border-b border-zinc-200 dark:border-zinc-800 text-center relative overflow-hidden">
+        {isTrialPreview && (
+          <div className="absolute top-5 left-5 right-5 z-20 flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => navigate('/trial')}
+              className="flex items-center gap-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-700 dark:text-zinc-200 transition-colors hover:bg-orange-100 dark:hover:bg-orange-900/30"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Dashboard
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowEndTrialModal(true)}
+              className="flex items-center gap-2 rounded-xl bg-red-50 dark:bg-red-900/20 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-red-600 dark:text-red-400 transition-colors hover:bg-red-100 dark:hover:bg-red-900/40"
+            >
+              <ShieldOff className="w-4 h-4" />
+              End Trial
+            </button>
+          </div>
+        )}
         <div className="relative z-10">
           <div className="bg-orange-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-orange-600/20 animate-in zoom-in-75 duration-500">
             <Utensils className="text-white w-8 h-8" />
@@ -270,6 +294,13 @@ const PublicMenuPage = () => {
         </div>
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-lg bg-gradient-to-b from-orange-500/5 to-transparent pointer-events-none" />
       </div>
+
+      {isTrialPreview && (
+        <TrialEndedModal
+          isOpen={showEndTrialModal}
+          onClose={() => setShowEndTrialModal(false)}
+        />
+      )}
 
       {/* ── Menu Items ─────────────────────────────────────────────────────── */}
       <div className="max-w-3xl mx-auto p-4 md:p-6 mt-4">

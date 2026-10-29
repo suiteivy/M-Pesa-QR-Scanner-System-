@@ -341,25 +341,25 @@ const LandingPage = () => {
               Support
             </p>
             <a
-              href="mailto:mpesaqr@cloudora.live"
+              href="mailto:mpesaqr@cloudora.africa"
               className="text-sm md:text-base font-black uppercase tracking-wider text-zinc-950 dark:text-white hover:text-brand-orange dark:hover:text-brand-orange transition-colors"
             >
-              mpesaqr@cloudora.live
+              mpesaqr@cloudora.africa
 
             </a>
               <a
-              href="mailto:contact@cloudora.live"
+              href="mailto:contact@cloudora.africa"
               className="text-sm md:text-base font-black uppercase tracking-wider text-zinc-950 dark:text-white hover:text-brand-orange dark:hover:text-brand-orange transition-colors"
             >
-        contact@cloudora.live
+        contact@cloudora.africa
               
             </a>
             
               <a
-              href="mailto:support@cloudora.live"
+              href="mailto:support@cloudora.africa"
               className="text-sm md:text-base font-black uppercase tracking-wider text-zinc-950 dark:text-white hover:text-brand-orange dark:hover:text-brand-orange transition-colors"
             >
-        support@cloudora.live
+        support@cloudora.africa
               
             </a>
           </div>
