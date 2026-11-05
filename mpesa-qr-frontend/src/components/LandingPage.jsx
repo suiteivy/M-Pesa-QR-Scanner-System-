@@ -331,7 +331,7 @@ const LandingPage = () => {
             {/* Copyright Data */}
             <p className="text-center md:text-left text-[10px] font-bold uppercase tracking-widest text-zinc-500 leading-relaxed">
               © 2026 • Cloudora Ltd. All rights reserved. <br className="hidden md:block" />
-              Designed in Nairobi. Powered by M-Pesa.
+              Designed in Nairobi.
             </p>
           </div>
 
