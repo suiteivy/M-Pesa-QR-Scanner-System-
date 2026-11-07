@@ -67,12 +67,12 @@ const TrialEndedModal = ({ isOpen, onClose, isExpiredReason = false }) => {
           </div>
 
           <h2 className="text-2xl font-black uppercase tracking-tight text-content-main dark:text-content-mainDark">
-            {isExpiredReason ? '3-Day Trial Completed!' : 'Free Trial Ended'}
+            {isExpiredReason ? '3-Day Demo Trial Over!' : 'Demo Trial Over'}
           </h2>
 
           <p className="text-xs sm:text-sm text-content-muted dark:text-content-mutedDark font-medium leading-relaxed px-2">
             {isExpiredReason
-              ? 'Your 3-day free trial session has ended. We hope you enjoyed exploring the M-Pesa QR Scanner & Merchant Dashboard!'
+              ? 'Your 3-day demo trial has ended. We hope you enjoyed exploring the M-Pesa QR Scanner & Merchant Dashboard!'
               : 'Thank you for testing out MerchantPro! What would you like to do next?'}
           </p>
         </div>

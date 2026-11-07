@@ -215,7 +215,7 @@ const TrialDashboard = () => {
         <div className="bg-status-errorBg text-status-error border-b border-status-error/20 px-4 py-3 text-center flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 shadow-md z-40 relative animate-in slide-in-from-top-4">
           <p className="text-xs font-bold uppercase tracking-wider flex items-center gap-2">
             <AlertCircle className="w-4 h-4" />
-            Your free trial has ended. Sign up to keep your data.
+            Your demo trial has ended. Sign up to keep your data.
           </p>
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <button

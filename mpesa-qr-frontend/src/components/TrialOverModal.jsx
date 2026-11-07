@@ -38,11 +38,11 @@ const TrialOverModal = ({ isOpen, onClose }) => {
           </div>
 
           <h2 className="text-2xl font-black uppercase tracking-tight text-content-main dark:text-content-mainDark">
-            Free Trial Over
+            Demo Trial Over
           </h2>
 
           <p className="text-xs sm:text-sm text-content-muted dark:text-content-mutedDark font-medium leading-relaxed px-2">
-            Your 3-day free trial has ended and has already been completed for this device. Please schedule a consultation or create an account to activate your merchant platform.
+            Your 3-day demo trial has ended and has already been completed for this device. Please schedule a consultation or create an account to activate your merchant platform.
           </p>
         </div>
 

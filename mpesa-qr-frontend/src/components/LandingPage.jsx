@@ -153,7 +153,7 @@ const LandingPage = () => {
               onClick={handleStartTrial}
               className="w-full sm:w-auto h-14 md:h-16 px-8 md:px-12 bg-brand-orange text-zinc-950 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-brand-orange/30 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3"
             >
-              {isTrialActive ? 'Resume Trial' : 'Start Free Trial'} <ArrowRight className="w-5 h-5" />
+              {isTrialActive ? 'Resume Trial' : 'Start Demo Trial'} <ArrowRight className="w-5 h-5" />
             </button>
             <button
               onClick={() => scrollToSection('how-it-works')}
@@ -182,13 +182,13 @@ const LandingPage = () => {
 
             {[
               {
-                step: '01', title: 'Link Your Till',
-                desc: 'Enter your existing Safaricom Till or Paybill number securely into your dashboard.',
+                step: '01', title: 'Link Your Menu',
+                desc: 'Enter your existing menu or update it with your latest items and prices.',
                 icon: LinkIcon
               },
               {
                 step: '02', title: 'Generate QR',
-                desc: 'Type in the amount owed. We instantly generate a unique QR code for that exact transaction.',
+                desc: 'An instant QR code for your menu is generated, ready for customers to scan.',
                 icon: QrCode
               },
               {
@@ -263,7 +263,7 @@ const LandingPage = () => {
             {/* STARTER */}
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] p-8 md:p-10 relative hover:border-brand-orange/50 transition-colors">
               <h3 className="text-3xl font-black uppercase italic tracking-tighter text-zinc-950 dark:text-white mb-2">Starter</h3>
-              <p className="text-zinc-500 font-bold text-xs uppercase tracking-wide mb-6">1 Hour Free Trial ($10 per month)</p>
+              <p className="text-zinc-500 font-bold text-xs uppercase tracking-wide mb-6">3 Day Demo Trial ($10 per month)</p>
 
               <div className="space-y-4 mb-10">
                 {['Unlimited QR Generation', 'Instant STK Pushes', 'Basic Digital Receipts'].map((feat, i) => (
@@ -274,7 +274,7 @@ const LandingPage = () => {
                 ))}
               </div>
               <button onClick={handleStartTrial} className="w-full h-14 bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white rounded-xl font-black uppercase tracking-widest text-xs hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
-                {isTrialActive ? 'Resume Trial' : 'Start Trial'}
+                {isTrialActive ? 'Resume Trial' : 'Start Demo'}
               </button>
             </div>
 
@@ -409,7 +409,7 @@ const LandingPage = () => {
                   onClick={() => { closePricingModal(); handleStartTrial(); }}
                   className="mt-6 h-11 w-full rounded-lg bg-zinc-100 dark:bg-zinc-800 text-xs font-black uppercase tracking-widest text-zinc-950 dark:text-white hover:bg-zinc-200 dark:hover:bg-zinc-700"
                 >
-                  {isTrialActive ? 'Resume Trial' : 'Start Free Trial'}
+                  {isTrialActive ? 'Resume Trial' : 'Start Demo Trial'}
                 </button>
               </div>
 
