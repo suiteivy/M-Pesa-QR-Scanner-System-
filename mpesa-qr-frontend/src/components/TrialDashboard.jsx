@@ -150,7 +150,7 @@ const TrialDashboard = () => {
 
       {/* --- 3-DAY LIVE DIGITAL TIMER BANNER AT TOP OF SCREEN --- */}
       {!isTrialExpired && (
-        <div className="bg-gradient-to-r from-brand-black via-zinc-900 to-brand-black border-b border-brand-orange/30 text-white px-4 py-3 shadow-lg z-50 relative">
+        <div className="bg-white dark:bg-gradient-to-r dark:from-brand-black dark:via-zinc-900 dark:to-brand-black border-b border-brand-orange/30 text-zinc-950 dark:text-white px-4 py-3 shadow-lg z-50 relative">
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-4">
             
             {/* Title & Pulse Badge */}
@@ -162,7 +162,7 @@ const TrialDashboard = () => {
                 <p className="text-[10px] font-black uppercase tracking-widest text-brand-orange flex items-center gap-1.5">
                   <Sparkles className="w-3 h-3" /> 3-Day Free Trial Active
                 </p>
-                <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider">
+                <p className="text-[9px] text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-wider">
                   Full Merchant Features Unlocked
                 </p>
               </div>
@@ -170,22 +170,22 @@ const TrialDashboard = () => {
 
             {/* Live 3-Day Digital Clock Display */}
             <div className="flex items-center gap-1.5 sm:gap-2 font-mono">
-              <div className="flex flex-col items-center bg-zinc-950 border border-zinc-800 px-2.5 py-1 rounded-xl shadow-inner min-w-[44px]">
-                <span className="text-sm sm:text-base font-black text-white leading-none">{days}</span>
-                <span className="text-[8px] text-zinc-400 font-bold uppercase">Days</span>
+              <div className="flex flex-col items-center bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 px-2.5 py-1 rounded-xl shadow-inner min-w-[44px]">
+                <span className="text-sm sm:text-base font-black text-zinc-950 dark:text-white leading-none">{days}</span>
+                <span className="text-[8px] text-zinc-500 dark:text-zinc-400 font-bold uppercase">Days</span>
               </div>
               <span className="text-brand-orange font-black text-xs sm:text-sm">:</span>
-              <div className="flex flex-col items-center bg-zinc-950 border border-zinc-800 px-2.5 py-1 rounded-xl shadow-inner min-w-[44px]">
-                <span className="text-sm sm:text-base font-black text-white leading-none">{hours}</span>
-                <span className="text-[8px] text-zinc-400 font-bold uppercase">Hrs</span>
+              <div className="flex flex-col items-center bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 px-2.5 py-1 rounded-xl shadow-inner min-w-[44px]">
+                <span className="text-sm sm:text-base font-black text-zinc-950 dark:text-white leading-none">{hours}</span>
+                <span className="text-[8px] text-zinc-500 dark:text-zinc-400 font-bold uppercase">Hrs</span>
               </div>
               <span className="text-brand-orange font-black text-xs sm:text-sm">:</span>
-              <div className="flex flex-col items-center bg-zinc-950 border border-zinc-800 px-2.5 py-1 rounded-xl shadow-inner min-w-[44px]">
-                <span className="text-sm sm:text-base font-black text-white leading-none">{minutes}</span>
-                <span className="text-[8px] text-zinc-400 font-bold uppercase">Mins</span>
+              <div className="flex flex-col items-center bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 px-2.5 py-1 rounded-xl shadow-inner min-w-[44px]">
+                <span className="text-sm sm:text-base font-black text-zinc-950 dark:text-white leading-none">{minutes}</span>
+                <span className="text-[8px] text-zinc-500 dark:text-zinc-400 font-bold uppercase">Mins</span>
               </div>
               <span className="text-brand-orange font-black text-xs sm:text-sm">:</span>
-              <div className="flex flex-col items-center bg-zinc-950 border border-zinc-800 px-2.5 py-1 rounded-xl shadow-inner min-w-[44px]">
+              <div className="flex flex-col items-center bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 px-2.5 py-1 rounded-xl shadow-inner min-w-[44px]">
                 <span className="text-sm sm:text-base font-black text-brand-orange leading-none">{seconds}</span>
                 <span className="text-[8px] text-zinc-400 font-bold uppercase">Secs</span>
               </div>
@@ -201,7 +201,7 @@ const TrialDashboard = () => {
               </button>
               <button
                 onClick={() => setShowEndTrialModal(true)}
-                className="flex-1 md:flex-none bg-zinc-800 hover:bg-zinc-700 text-status-error px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 border border-status-error/30"
+                className="flex-1 md:flex-none bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-status-error px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 border border-status-error/30"
               >
                 <ShieldOff className="w-3 h-3" /> End Trial
               </button>
@@ -255,13 +255,6 @@ const TrialDashboard = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-3">
             <Button
-              onClick={() => navigate('/generate-qr')}
-              variant="ghost"
-              className="text-xs font-bold text-content-muted hover:text-brand-orange"
-            >
-              <QrCode className="w-4 h-4 mr-2" /> Generate QR
-            </Button>
-            <Button
               onClick={() => navigate('/payment-scanner')}
               variant="ghost"
               className="text-xs font-bold text-content-muted hover:text-brand-orange"
@@ -270,13 +263,6 @@ const TrialDashboard = () => {
             </Button>
             <div className="w-px h-6 bg-brand-borderLight dark:bg-brand-borderDark mx-2" />
             <ThemeToggle />
-            <Button
-              onClick={() => setShowEndTrialModal(true)}
-              variant="ghost"
-              className="text-status-error hover:bg-status-errorBg text-xs font-bold"
-            >
-              <LogOut className="w-4 h-4 mr-2" /> End Trial
-            </Button>
           </div>
 
           {/* Mobile Navigation Toggle */}
@@ -297,13 +283,6 @@ const TrialDashboard = () => {
         {showNavMenu && (
           <div className="md:hidden absolute top-full left-0 w-full bg-brand-surface dark:bg-brand-gray border-b border-brand-borderLight dark:border-brand-borderDark shadow-xl py-4 px-4 flex flex-col gap-3 animate-in slide-in-from-top-2 z-40">
             <Button
-              onClick={() => { navigate('/generate-qr'); setShowNavMenu(false); }}
-              variant="outline"
-              className="w-full justify-start border-brand-borderLight dark:border-brand-borderDark text-sm"
-            >
-              <QrCode className="w-4 h-4 mr-3 text-brand-orange" /> Generate QR
-            </Button>
-            <Button
               onClick={() => { navigate('/payment-scanner'); setShowNavMenu(false); }}
               variant="outline"
               className="w-full justify-start border-brand-borderLight dark:border-brand-borderDark text-sm"
@@ -311,13 +290,6 @@ const TrialDashboard = () => {
               <Smartphone className="w-4 h-4 mr-3 text-brand-orange" /> Payment Scanner
             </Button>
             <div className="h-px w-full bg-brand-borderLight dark:bg-brand-borderDark my-1" />
-            <Button
-              onClick={() => { setShowEndTrialModal(true); setShowNavMenu(false); }}
-              variant="ghost"
-              className="w-full justify-start text-status-error hover:bg-status-errorBg text-sm"
-            >
-              <LogOut className="w-4 h-4 mr-3" /> End Free Trial
-            </Button>
           </div>
         )}
       </header>

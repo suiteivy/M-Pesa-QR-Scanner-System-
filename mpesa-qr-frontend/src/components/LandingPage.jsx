@@ -17,7 +17,11 @@ import {
   Check,
   Utensils,
   Plus,
-  X
+  X,
+  Mail,
+  Phone,
+  Instagram,
+  Linkedin
 } from 'lucide-react';
 
 import ThemeToggle from './ui/Toggle';
@@ -135,17 +139,17 @@ const LandingPage = () => {
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-100 dark:bg-brand-orange/10 text-brand-orange border border-brand-orange/20 animate-in fade-in zoom-in duration-700">
             <Zap className="w-4 h-4 fill-current" />
             <span className="text-[10px] font-black uppercase tracking-[0.2em]">
-              The Modern M-Pesa Checkout
+              The Modern Menu Checkout
             </span>
           </div>
 
           <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tighter uppercase italic leading-[0.9] text-zinc-950 dark:text-white animate-in slide-in-from-bottom-12 duration-1000">
-            Accept M-Pesa.<br />
+            Accept Orders.<br />
             <span className="text-brand-orange">Zero Friction.</span>
           </h1>
 
           <p className="max-w-2xl mx-auto text-zinc-600 dark:text-zinc-400 font-bold text-sm md:text-xl animate-in fade-in duration-1000 delay-300 px-4">
-            Turn your phone or tablet into a smart payment terminal. Generate dynamic QR codes that open M-Pesa instantly for your customers.
+            Turn your phone or tablet into an interactive menu. Generate dynamic QR codes that open your menu instantly for your customers.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 md:pt-6 animate-in zoom-in-95 duration-1000 delay-500">
@@ -227,7 +231,7 @@ const LandingPage = () => {
                 Dynamic QR <br /> Generation
               </h3>
               <p className="max-w-md font-bold text-sm leading-relaxed mb-8 opacity-80">
-                Stop telling customers your Till number and the amount. Our system embeds the price directly into the QR code. They scan, enter PIN, and you're done.
+                Our system embeds the interactive menu directly into the QR code that customers scan.
               </p>
             </div>
             <QrCode className="absolute -right-8 -bottom-8 h-64 w-64 text-zinc-950/10 -rotate-12 group-hover:rotate-0 transition-all duration-1000" />
@@ -319,7 +323,7 @@ const LandingPage = () => {
 
       {/* --- FOOTER (Same logic, slightly cleaner layout) --- */}
       <footer className="max-w-7xl mx-auto px-6 py-12 md:py-16 border-t border-zinc-200 dark:border-brand-gray/50">
-        <div className="flex flex-col md:flex-row justify-between items-center md:items-end gap-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10">
 
           {/* --- LEFT SIDE: Brand & Copyright (Grouped for Proximity) --- */}
           <div className="flex flex-col items-center md:items-start gap-4">
@@ -335,32 +339,34 @@ const LandingPage = () => {
             </p>
           </div>
 
-          {/* --- RIGHT SIDE: Actionable Contact Info --- */}
-          <div className="flex flex-col items-center md:items-end gap-1.5 text-center md:text-right">
-            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
-              Support
-            </p>
-            <a
-              href="mailto:mpesaqr@cloudora.africa"
-              className="text-sm md:text-base font-black uppercase tracking-wider text-zinc-950 dark:text-white hover:text-brand-orange dark:hover:text-brand-orange transition-colors"
-            >
-              mpesaqr@cloudora.africa
+          <div className="flex flex-col gap-4">
+            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Email</p>
+            <a href="mailto:mpesaqr@cloudora.africa" className="flex items-center gap-2 text-xs font-black tracking-wide text-zinc-950 dark:text-white hover:text-brand-orange transition-colors">
+              <Mail className="w-4 h-4 text-brand-orange" /> mpesaqr@cloudora.africa
+            </a>
+            <a href="mailto:contact@cloudora.africa" className="flex items-center gap-2 text-xs font-black tracking-wide text-zinc-950 dark:text-white hover:text-brand-orange transition-colors">
+              <Mail className="w-4 h-4 text-brand-orange" /> contact@cloudora.africa
+            </a>
+            <a href="mailto:support@cloudora.africa" className="flex items-center gap-2 text-xs font-black tracking-wide text-zinc-950 dark:text-white hover:text-brand-orange transition-colors">
+              <Mail className="w-4 h-4 text-brand-orange" /> support@cloudora.africa
+            </a>
+          </div>
 
+          <div className="flex flex-col gap-4">
+            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Call Us</p>
+            <p className="text-xs font-medium leading-relaxed text-zinc-500 dark:text-zinc-400">Speak directly to our team.</p>
+            <a href="tel:+254759585197" className="flex items-center gap-2 text-sm font-black tracking-wide text-zinc-950 dark:text-white hover:text-brand-orange transition-colors">
+              <Phone className="w-4 h-4 text-brand-orange" /> +254 759 585 197
             </a>
-              <a
-              href="mailto:contact@cloudora.africa"
-              className="text-sm md:text-base font-black uppercase tracking-wider text-zinc-950 dark:text-white hover:text-brand-orange dark:hover:text-brand-orange transition-colors"
-            >
-        contact@cloudora.africa
-              
+          </div>
+
+          <div className="flex flex-col gap-4">
+            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Social</p>
+            <a href="https://www.instagram.com/cloudora.limited?vrfl=MWpuZHF6bGVremkwYw==" target="_blank" rel="noreferrer" className="flex items-center gap-2 text-xs font-black tracking-wide text-zinc-950 dark:text-white hover:text-brand-orange transition-colors">
+              <Instagram className="w-4 h-4 text-brand-orange" /> cloudora.limited
             </a>
-            
-              <a
-              href="mailto:support@cloudora.africa"
-              className="text-sm md:text-base font-black uppercase tracking-wider text-zinc-950 dark:text-white hover:text-brand-orange dark:hover:text-brand-orange transition-colors"
-            >
-        support@cloudora.africa
-              
+            <a href="https://www.linkedin.com/company/cloudora-limited/" target="_blank" rel="noreferrer" className="flex items-center gap-2 text-xs font-black tracking-wide text-zinc-950 dark:text-white hover:text-brand-orange transition-colors">
+              <Linkedin className="w-4 h-4 text-brand-orange" /> Cloudora limited
             </a>
           </div>
 

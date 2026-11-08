@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MessageSquareHeart, Home, Clock, Sparkles, X } from 'lucide-react';
+import { MessageSquareHeart, Home, Clock, Sparkles, X, Loader2 } from 'lucide-react';
 import { useFreeTrial } from '../hooks/FreeTrialContext';
 
 // Default Google Form URL — replace with your actual Google Form URL or set REACT_APP_GOOGLE_FORM_URL in .env
@@ -11,11 +11,13 @@ const TrialEndedModal = ({ isOpen, onClose, isExpiredReason = false }) => {
   const navigate = useNavigate();
   const { endTrial } = useFreeTrial();
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  const [isFeedbackFormLoading, setIsFeedbackFormLoading] = useState(false);
 
   if (!isOpen) return null;
 
   const handleGiveFeedback = () => {
     setShowFeedbackForm(true);
+    setIsFeedbackFormLoading(true);
     void endTrial();
   };
 
@@ -47,12 +49,23 @@ const TrialEndedModal = ({ isOpen, onClose, isExpiredReason = false }) => {
             <h2 className="text-lg sm:text-xl font-black uppercase tracking-tight text-content-main dark:text-content-mainDark">
               Share your feedback
             </h2>
-            <iframe
-              title="MerchantPro trial feedback form"
-              src={GOOGLE_FORM_EMBED_URL}
-              className="mt-4 block h-[68vh] min-h-[360px] max-h-[680px] w-full rounded-xl border border-brand-borderLight dark:border-brand-borderDark bg-white"
-              allowFullScreen
-            />
+            <div className="relative mt-4">
+              {isFeedbackFormLoading && (
+                <div className="absolute inset-0 z-10 flex min-h-[360px] flex-col items-center justify-center gap-3 rounded-xl bg-brand-surface/95 dark:bg-brand-gray/95">
+                  <Loader2 className="h-8 w-8 animate-spin text-brand-orange" />
+                  <p className="text-xs font-black uppercase tracking-widest text-content-muted dark:text-content-mutedDark">
+                    Loading form
+                  </p>
+                </div>
+              )}
+              <iframe
+                title="MerchantPro trial feedback form"
+                src={GOOGLE_FORM_EMBED_URL}
+                onLoad={() => setIsFeedbackFormLoading(false)}
+                className="block h-[68vh] min-h-[360px] max-h-[680px] w-full rounded-xl border border-brand-borderLight dark:border-brand-borderDark bg-white"
+                allowFullScreen
+              />
+            </div>
           </div>
         ) : (
           <>
