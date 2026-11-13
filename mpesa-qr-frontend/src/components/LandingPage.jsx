@@ -21,7 +21,8 @@ import {
   Mail,
   Phone,
   Instagram,
-  Linkedin
+  Linkedin,
+  Music2
 } from 'lucide-react';
 
 import ThemeToggle from './ui/Toggle';
@@ -367,6 +368,9 @@ const LandingPage = () => {
             </a>
             <a href="https://www.linkedin.com/company/cloudora-limited/" target="_blank" rel="noreferrer" className="flex items-center gap-2 text-xs font-black tracking-wide text-zinc-950 dark:text-white hover:text-brand-orange transition-colors">
               <Linkedin className="w-4 h-4 text-brand-orange" /> Cloudora limited
+            </a>
+            <a href="https://www.tiktok.com/@cloudora.limited?_r=1&_t=ZS-9AzQTNjONHN" target="_blank" rel="noreferrer" className="flex items-center gap-2 text-xs font-black tracking-wide text-zinc-950 dark:text-white hover:text-brand-orange transition-colors">
+              <Music2 className="w-4 h-4 text-brand-orange" /> TikTok: @cloudora.limited
             </a>
           </div>
 
